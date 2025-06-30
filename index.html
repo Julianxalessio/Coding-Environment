@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        textarea {
+            width: 30%;
+            height: 100%;
+            font-size: 1.3em;
+        }
+
+        #InputScript {
+            width: 50%;
+        }
+
+        #RunButton {
+            height: 40px;
+            width: 18.5%;
+            bottom: 0;
+            position: fixed;
+            margin-left: 2px;
+            font-size: 1em;
+            background-color: white;
+            border-color: black;
+            border-radius: 8px;
+        }
+
+        .Container {
+            position: fixed;
+            top: 0;
+            left: 2px;
+            width: 100%;
+            height: 99%;
+        }
+
+        .UserName {
+            width: 18%;
+            position: fixed;
+            right: 5px;
+            top: -20px;
+            border-radius: 10px;
+            border: solid 1px black;
+            text-align: center;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+
+        .None {
+            display: none !important;
+        }
+
+        #LoginSite {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        #LoginContainer,
+        #RegisterContainer {
+            border: solid 2px black;
+            padding: 5px;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            /* Add this */
+            gap: 10px;
+            /* max-height: 2em;  Remove or comment this out */
+            width: 40em;
+        }
+
+        #LoginSite h3 {
+            font-size: 2em;
+            text-align: center;
+            margin-bottom: 0;
+            margin-top: 0;
+        }
+
+        #LoginSite input {
+            height: 23px;
+            width: auto;
+            font-size: 1em;
+        }
+
+        #LoginSite button {
+            height: 30px;
+            width: 100%;
+            font-size: 1.2em;
+            background-color: white;
+            border-color: black;
+            border-radius: 8px;
+        }
+
+        #CloseButton {
+            position: absolute;
+            top: 10px;
+            right: 30px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            font-size: 18px;
+            font-weight: bold;
+            font-family: Arial, Helvetica, sans-serif;
+            border-radius: 8px;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";        
+        // https://firebase.google.com/docs/web/setup#available-libraries
+
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+            apiKey: "AIzaSyChvPU8blLsvMTUq5LO0dDewMiDzZhVx4M",
+            authDomain: "coding-environment-1df0d.firebaseapp.com",
+            databaseURL: "https://coding-environment-1df0d-default-rtdb.firebaseio.com/",
+            projectId: "coding-environment-1df0d",
+            storageBucket: "coding-environment-1df0d.firebasestorage.app",
+            messagingSenderId: "500351380812",
+            appId: "1:500351380812:web:48e77ef8e5a46dc5b0b3e9",
+            measurementId: "G-FMDTP8GK8X"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // ============================= Userfunktions ============================
+        
+        window.creatUser = function (UserName, password) {
+            const dbRef = ref(db, `users/${UserName}`);
+            set(dbRef, {
+                Password: password
+            }).then(() => {
+                console.log("User created!");
+            }).catch((error) => {
+                console.error("Fehler beim Speichern:", error);
+            });
+        };
+        window.readFile = function () {
+            get(child(ref(db), `users/Jera/Script 1`))
+                .then((snapshot) => {
+                if (snapshot.exists()) {
+                    const fileString = snapshot.val();
+                    const lines = fileString.replace(/\\n/g, "\n");
+                    document.getElementById("InputScript").value = lines.trim();
+                } else {
+                    alert("File not found");
+                }
+                })
+            .catch((error) => {
+                console.error("Fehler beim Abrufen:", error);
+            });
+        }
+        window.login = function (InputUser, InputPassword) {
+            get(child(ref(db), `users/${InputUser}/Password`))
+                .then((snapshot) => {
+                if (snapshot.exists()) {
+                    const password = snapshot.val();
+                    if (InputPassword == password){
+                        LoginedUser = InputUser;
+                        document.getElementById("UserName").innerHTML = InputUser;
+                        OpenLoginSite();
+                    }
+                    else{
+                        alert("Wrong Password");
+                    }
+                } else {
+                    alert("Benutzer nicht gefunden");
+                }
+                })
+            .catch((error) => {
+                console.error("Fehler beim Abrufen:", error);
+            });
+        };
+    
+    </script>
+    <div class="Container">
+        <textarea id="InputScript" placeholder="Code:"></textarea>
+        <textarea readonly id="Output" placeholder="Output:"></textarea>
+        <button onclick="RunCode()" id="RunButton">Run</button>
+        <h3 id="UserName" class="UserName" onclick="OpenLoginSite()">Login</h3>
+    </div>
+    <div id="LoginSite" class="None">
+        <div id="LoginContainer">
+            <h3>Login</h3>
+            <input type="text" placeholder="Username" id="LoginInputName">
+            <input type="password" placeholder="Passwort" id="LoginInputPassword">
+            <button onclick="togglePasswordLogin()" id="TogglePasswordButtonLogin">
+                <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+                    stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8
+                a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
+                    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                    <line x1="3" y1="3" x2="21" y2="21" />
+                </svg>
+            </button>
+            <button id="LoginButton" onclick="loginEntered()">Login</button>
+        </div>
+        <div id="RegisterContainer">
+            <h3>Register</h3>
+            <input type="text" placeholder="Username" id="RegisterInputName">
+            <input type="password" id="RegisterInputPassword" placeholder="Passwort">
+            <button onclick="togglePasswordRegister()" id="TogglePasswordButtonRegister">
+                <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+                    stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8
+                a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
+                    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                    <line x1="3" y1="3" x2="21" y2="21" />
+                </svg>
+            </button>
+            <button id="RegisterButton" onclick="registerEntered()">Register</button>
+        </div>
+        <h2 onclick="OpenLoginSite()" id="CloseButton">X</h2>
+    </div>
+    <script>
+        // ============================= Variables ============================
+        let LoginedUser;
+        let Login = false;
+        let variables = {};
+        let functions = {};
+
+        const eyeSVG = `
+    <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+      stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      viewBox="0 0 24 24">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  `;
+
+        const eyeOffSVG = `
+    <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+      stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      viewBox="0 0 24 24">
+      <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8
+               a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
+      <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+      <line x1="3" y1="3" x2="21" y2="21" />
+    </svg>
+    `;
+
+        // ============================= Other Functions ============================
+        function OpenLoginSite() {
+            document.getElementById("LoginSite").classList.toggle("None");
+        }
+
+
+        function togglePasswordRegister() {
+            const input = document.getElementById("RegisterInputPassword");
+            const button = document.getElementById("TogglePasswordButtonRegister");
+
+            if (input.type === "password") {
+                input.type = "text";
+                button.innerHTML = eyeSVG;
+            } else {
+                input.type = "password";
+                button.innerHTML = eyeOffSVG;
+            }
+        }
+
+        function togglePasswordLogin() {
+            const input = document.getElementById("LoginInputPassword");
+            const button = document.getElementById("TogglePasswordButtonLogin");
+
+            if (input.type === "password") {
+                input.type = "text";
+                button.innerHTML = eyeSVG;
+            } else {
+                input.type = "password";
+                button.innerHTML = eyeOffSVG;
+            }
+        }
+
+        function loginEntered() {
+            UserName = document.getElementById("LoginInputName").value;
+            Password = document.getElementById("LoginInputPassword").value;
+            login(UserName, Password);
+        }
+
+        function registerEntered() {
+            UserName = document.getElementById("RegisterInputName").value;
+            Password = document.getElementById("RegisterInputPassword").value;
+            creatUser(UserName, Password);
+        }
+
+        // ============================= Interpreter ============================
+        function log(msg) {
+            document.getElementById("Output").value += msg + "\n";
+        }
+
+        function exprWithVars(expr) {
+            return expr.replace(/\b\w+\b/g, word =>
+                variables.hasOwnProperty(word) ? variables[word] : word
+            );
+        }
+
+        function interpretBlock(lines, startIndex) {
+            let i = startIndex;
+            while (i < lines.length) {
+                const line = lines[i].trim();
+                if (line === "}") return i;
+                const result = interpret(lines[i], lines, i);
+                if (result === "inserted") {
+                    i++;
+                    continue;
+                }
+                i++;
+            }
+            return i;
+        }
+
+        function interpret(line, lines, currentIndex) {
+            line = line.trim();
+
+            // set x = 5;
+            if (line.startsWith("set ")) {
+                const parts = line.slice(4, -1).split(" = ");
+                const varName = parts[0].trim();
+                try {
+                    variables[varName] = eval(exprWithVars(parts[1].trim()));
+                } catch {
+                    log("Fehler bei set");
+                }
+            }
+
+            // write (x)\
+            else if (line.startsWith("write (") && line.endsWith(")\\")) {
+                const content = line.slice(7, -2).trim();
+                if (content.startsWith('"') && content.endsWith('"')) {
+                    log(content.slice(1, -1));
+                } else if (variables.hasOwnProperty(content)) {
+                    log(variables[content]);
+                } else {
+                    log(`Fehler: '${content}' nicht definiert`);
+                }
+            }
+
+            // incase x > 3 {
+            else if (line.startsWith("incase ") && line.endsWith("{")) {
+                const condition = line.slice(7, -1).trim();
+                try {
+                    if (!eval(exprWithVars(condition))) {
+                        // Block überspringen
+                        while (currentIndex < lines.length && lines[currentIndex].trim() !== "}") {
+                            currentIndex++;
+                        }
+                        return currentIndex; // Position nach Block-Ende
+                    }
+                    return "start_block";
+                } catch {
+                    log("Fehler in incase");
+                    return "skip_block";
+                }
+            }
+
+            // func myFunc {
+            else if (line.startsWith("func ")) {
+                let funcName = line.slice(5).trim();
+                if (funcName.endsWith("{")) funcName = funcName.slice(0, -1).trim();
+                functions[funcName] = [];
+                return ["start_function", funcName];
+            }
+
+            // call myFunc\
+            else if (line.startsWith("call ") && line.endsWith("\\")) {
+                const funcName = line.slice(5, -1).trim();
+                if (functions.hasOwnProperty(funcName)) {
+                    for (const funcLine of functions[funcName]) {
+                        interpret(funcLine, lines, currentIndex);
+                    }
+                } else {
+                    log(`Fehler: Funktion '${funcName}' nicht definiert`);
+                }
+            }
+
+            return null;
+        }
+
+        function RunCode() {
+            document.getElementById("Output").value = "";
+            variables = {};
+            functions = {};
+
+            const lines = document.getElementById("InputScript").value.split("\n");
+            let i = 0;
+
+            while (i < lines.length) {
+                const result = interpret(lines[i], lines, i);
+
+                if (result === "inserted") {
+                    i++;
+                } else if (Array.isArray(result) && result[0] === "start_function") {
+                    const funcName = result[1];
+                    i++;
+                    while (i < lines.length && lines[i].trim() !== "}") {
+                        functions[funcName].push(lines[i].trim());
+                        i++;
+                    }
+                    i++; // überspringe }
+                } else if (result === "start_block") {
+                    i++;
+                    i = interpretBlock(lines, i);
+                    i++;
+                } else if (result === "skip_block") {
+                    i++;
+                    while (i < lines.length && lines[i].trim() !== "}") {
+                        i++;
+                    }
+                    i++;
+                } else {
+                    i++;
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>

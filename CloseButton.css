@@ -1,0 +1,21 @@
+.btn-delete {
+            font-size: 1em;
+            color: red;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            padding: 4px 16px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .btn-delete .mdi {
+            color: red;
+            font-size: 22px;
+        }
+
+        .btn-delete:hover {
+            box-shadow: 0 0 0 4px #ffcccc;
+        }

@@ -1,0 +1,9 @@
+.active {
+    background-color: black;
+    color: white;
+    border-color: white;
+}
+
+.None {
+    display: none !important;
+}

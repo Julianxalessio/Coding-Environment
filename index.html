@@ -381,7 +381,7 @@
 
         function CreateFileFromFirebase(Name, Content) {
             if (LoginedUser == null) {
-                //alert("Not loged in")
+                alert("Not loged in")
             } else {
                 // Prevent duplicate file divs
                 if (document.getElementById(Name)) return;
@@ -426,7 +426,7 @@
                 alert("Insert a name for the file");
             } else {
                 if (LoginedUser == null) {
-                    //alert("Not loged in")
+                    alert("Not loged in")
                 } else {
                     const fileExists = Object.keys(Files).some(key => key.toLowerCase() === Name.toLowerCase());
                     if (!fileExists) {

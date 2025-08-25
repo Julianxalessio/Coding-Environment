@@ -201,7 +201,7 @@
             }
 
             const UserName = LoginedUser;
-            const FileContent = document.getElementById("InputScript").value;
+            const FileContent = "";
             const dbRef = ref(db, `users/${UserName}/Files/${FileName}`);
 
             if (UserName == "" || FileName == ""){

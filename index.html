@@ -6,128 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
     <link rel="stylesheet" href="CloseButton.css">
-    <link rel="stylesheet" href="LoginSite.css">
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="Classes.css">
     <title>Coding-Environment</title>
     <style>
-        textarea {
-            width: 30%;
-            height: 100%;
-            font-size: 1.3em;
-        }
-
-        #InputScript {
-            width: 50%;
-        }
-
-        .Container {
-            position: fixed;
-            top: 0;
-            left: 2px;
-            width: 100%;
-            height: 99%;
-            display: flex;
-            gap: 5px;
-        }
-
-        .UserName {
-            width: 100%;
-            border-radius: 10px;
-            height: min-content;
-            border: solid 1px black;
-            text-align: center;
-            font-size: 1.5em;
-            cursor: pointer;
-            color: black;
-            background-color: white;
-            margin: 5px 0 10px 0;
-        }
-
-        .UserName:hover {
-            background-color: black;
-            color: white;
-        }
-
-        .FilesContainer {
-            flex-grow: 1;
-            height: auto;
-            border-radius: 10px;
-            border: solid 1px black;
-            overflow-y: auto;
-        }
-
-        .NewFileBtn {
-            height: 30px;
-            width: 30px;
-            font-size: 1.1em;
-            background-color: white;
-            border-color: black;
-            border-radius: 8px;
-            margin: 5px;
-        }
-
-        .NewFileBtn:hover {
-            background-color: rgb(65, 64, 64);
-            color: white;
-        }
-
-        .NewFileNameInput {
-            font-size: 1.1em;
-            width: calc(100% - 60px);
-        }
-
-        .File {
-            border: solid 1px black;
-            border-radius: 5px;
-            margin: 5px;
-            padding: 4px;
-            height: auto;
-            min-height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .FileName {
-            font-size: 1.1em;
-            margin: 0;
-        }
-
-        .RightSide {
-            display: flex;
-            flex-direction: column;
-            margin-right: 5px;
-        }
-
-        .Buttons {
-            margin-top: 10px;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .Buttons button {
-            background-color: white;
-            height: 40px;
-            width: 100%;
-            font-size: 1em;
-            border-color: black;
-            border-radius: 8px;
-        }
-
-        .Buttons button:hover {
-            background-color: rgb(65, 64, 64);
-            color: white;
-        }
-
-        .FileHitbox {
-            border-radius: 5px;
-            height: auto;
-            min-height: 30px;
-            cursor: pointer;
-            width: 100%;
-        }
     </style>
 </head>
 
@@ -275,12 +157,15 @@
         }
     </script>
     <div class="Container">
-        <textarea id="InputScript" placeholder="Code:"></textarea>
-        <textarea readonly id="Output" placeholder="Output:"></textarea>
+        <div class="LeftSide">
+            <textarea id="InputScript" placeholder="Code:"></textarea>
+            <textarea readonly id="Output" placeholder="Output:"></textarea>
+        </div>
+
         <div class="RightSide">
             <h3 id="UserName" class="UserName" onclick="OpenLoginSite()">Login</h3>
             <div class="FilesContainer">
-                <button class="NewFileBtn" onclick="CreateFile()">+</button>
+                <button class="NewFileBtn" onclick="CreateFile()">Create</button>
                 <input id="FileNameInput" class="NewFileNameInput" type="text" placeholder="Name:">
                 <div id="FilesContainer2"></div>
             </div>
@@ -292,37 +177,32 @@
     </div>
     <div id="LoginSite" class="None">
         <div id="LoginContainer">
-            <h3>Login</h3>
-            <input type="text" placeholder="Username" id="LoginInputName">
-            <input type="password" placeholder="Passwort" id="LoginInputPassword">
-            <button onclick="togglePasswordLogin()" id="TogglePasswordButtonLogin">
-                <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
-                    stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8
-                a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
+            <h3>Login</h3> <input type="text" placeholder="Username" id="LoginInputName"> <input type="password"
+                placeholder="Passwort" id="LoginInputPassword"> <button onclick="togglePasswordLogin()"
+                id="TogglePasswordButtonLogin"> <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20"
+                    height="20" fill="none" stroke="black" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" viewBox="0 0 24 24">
+                    <path
+                        d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8 a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
                     <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-                    <line x1="3" y1="3" x2="21" y2="21" />
-                </svg>
-            </button>
-            <button id="LoginButton" onclick="loginEntered()">Login</button>
+                    <line x1="3" y1="3" x2="21" y2="21" /> </svg> </button> <button id="LoginButton"
+                onclick="loginEntered()">Login</button>
         </div>
         <div id="RegisterContainer">
-            <h3>Register</h3>
-            <input type="text" placeholder="Username" id="RegisterInputName">
-            <input type="password" id="RegisterInputPassword" placeholder="Passwort">
-            <button onclick="togglePasswordRegister()" id="TogglePasswordButtonRegister">
-                <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
-                    stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8
-                a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
+            <h3>Register</h3> <input type="text" placeholder="Username" id="RegisterInputName"> <input type="password"
+                id="RegisterInputPassword" placeholder="Passwort"> <button onclick="togglePasswordRegister()"
+                id="TogglePasswordButtonRegister"> <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20"
+                    height="20" fill="none" stroke="black" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" viewBox="0 0 24 24">
+                    <path
+                        d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8 a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
                     <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-                    <line x1="3" y1="3" x2="21" y2="21" />
-                </svg>
-            </button>
-            <button id="RegisterButton" onclick="registerEntered()">Register</button>
+                    <line x1="3" y1="3" x2="21" y2="21" /> </svg> </button> <button id="RegisterButton"
+                onclick="registerEntered()">Register</button>
         </div>
         <h2 onclick="OpenLoginSite()" id="CloseButton">X</h2>
     </div>
+
     <script>
         // ============================= Variables ============================
         let LoginedUser;
@@ -509,6 +389,7 @@
                     document.getElementById(FileName).className = "File active";
                     ActiveFile = FileName;
                 }
+                document.getElementById("Output").value = "";
             }
         }
     </script>

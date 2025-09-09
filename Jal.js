@@ -110,7 +110,8 @@ function RunCode() {
     variables = {};
     functions = {};
 
-    const lines = document.getElementById("InputScript").value.split("\n");
+    const linesN = document.getElementById("InputScript").value.split("\n");
+    const lines = linesN.trim();
     let i = 0;
 
     while (i < lines.length) {

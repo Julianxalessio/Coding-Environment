@@ -40,7 +40,7 @@ function interpret(line, lines, currentIndex) {
         }
     }
 
-    else if (line.startsWith("write (") && line.endsWith(")\\")) {
+    else if (line.startsWith("write (") && line.endsWith(");")) {
         const content = line.slice(7, -2).trim();
         if (content.startsWith('"') && content.endsWith('"')) {
             log(content.slice(1, -1));
@@ -74,7 +74,7 @@ function interpret(line, lines, currentIndex) {
         return ["start_function", funcName];
     }
 
-    else if (line.startsWith("call ") && line.endsWith("\\")) {
+    else if (line.startsWith("call ") && line.endsWith(";")) {
         const funcName = line.slice(5, -1).trim();
         if (functions.hasOwnProperty(funcName)) {
             for (const funcLine of functions[funcName]) {
@@ -85,7 +85,33 @@ function interpret(line, lines, currentIndex) {
         }
     }
 
-    else if (line.startsWith("connect src:\"") && line.endsWith("\\")) {
+    else if (line.startsWith("during (") && line.endsWith(") {")) {
+        const condition = line.slice(8, -3).trim();
+        try {
+            while (eval(exprWithVars(condition))) {
+                let i = currentIndex + 1;
+                while (i < lines.length && lines[i].trim() !== "}") {
+                    interpret(lines[i], lines, i);
+                    i++;
+                }
+                // Force update of condition variables
+                const updatedCondition = exprWithVars(condition);
+                if (!eval(updatedCondition)) {
+                    break;
+                }
+            }
+            // Move past the closing brace
+            while (currentIndex < lines.length && lines[currentIndex].trim() !== "}") {
+                currentIndex++;
+            }
+            return currentIndex;
+        } catch (e) {
+            log("Fehler in during: " + e.message);
+            return "skip_block";
+        }
+    }
+
+    else if (line.startsWith("connect src:\"") && line.endsWith(";")) {
         const path = line.slice(13, -2).trim();
         const FilesList = Files;
         let extraLines = FilesList[path];
@@ -102,7 +128,37 @@ function interpret(line, lines, currentIndex) {
         return "inserted";
     }
 
-    return null;
+    else if (line.startsWith("reSet ") && line.endsWith(";")) {
+        const parts = line.slice(6, -1).split("=");
+        if (parts.length !== 2) {
+            log("Fehler: Ungültiges reSet Format");
+            return;
+        }
+        const varName = parts[0].trim();
+        const expression = parts[1].trim();
+        
+        try {
+            // Check if variable exists
+            if (!variables.hasOwnProperty(varName)) {
+                log(`Fehler: Variable '${varName}' existiert nicht`);
+                return;
+            }
+            // Evaluate the expression with current variable values
+            const newValue = eval(exprWithVars(expression));
+            variables[varName] = newValue;
+        } catch (e) {
+            log("Fehler bei reSet: " + e.message);
+        }
+    }
+    else if (line === "" || line.startsWith("//") || line.startsWith("}")) {
+        // Leere Zeilen oder Kommentare ignorieren
+        return null;
+    }
+
+    else {
+        log(`Unbekannter Befehl: '${line}'`);
+        return null;
+    }
 }
 
 function RunCode() {
@@ -111,7 +167,7 @@ function RunCode() {
     functions = {};
 
     const linesN = document.getElementById("InputScript").value.split("\n");
-    const lines = linesN.trim();
+    const lines = linesN; // use the array returned by split; don't call trim() on it
     let i = 0;
 
     while (i < lines.length) {
@@ -147,3 +203,54 @@ function RunCode() {
 function loadExternalFile(filename, content) {
     externalFiles[filename] = content;
 }
+
+// Add this function after loadExternalFile
+
+function insertCodeAtCursor(codeBlock) {
+    const input = document.getElementById("InputScript");
+    const startPos = input.selectionStart;
+    const endPos = input.selectionEnd;
+    const beforeText = input.value.substring(0, startPos);
+    const afterText = input.value.substring(endPos);
+
+    input.value = beforeText + codeBlock + afterText;
+    
+    // Place cursor after inserted code
+    const newCursorPos = startPos + codeBlock.length;
+    input.setSelectionRange(newCursorPos, newCursorPos);
+    input.focus();
+}
+
+// Make it available globally
+window.insertCodeAtCursor = insertCodeAtCursor;
+
+// ensure RunCode is reachable from inline onclick and hook button safely
+window.RunCode = RunCode;
+document.getElementById("RunButton")?.addEventListener("click", RunCode);
+
+// Update the codeTemplates object
+
+const codeTemplates = {
+    if: "incase (condition) {\n    \n}\n",
+    during: "during (x < 10) {\n    \n}\n",
+    func: "func name {\n    \n}\n",
+    set: "set variable = value;\n",
+    write: "write(value);\n",
+    call: "call functionName;\n",
+    reset: "reSet variable = newValue;\n",
+    connect: "connect src:\"filename\";\n",
+    comment: "// This is a comment\n"
+};
+
+// No need for insertSelected function anymore since we're passing the template directly
+window.codeTemplates = codeTemplates; // Make templates available globally
+
+function insertTemplate() {
+    const select = document.getElementById("codeTemplates");
+    const template = codeTemplates[select.value];
+    if (template) {
+        insertCodeAtCursor(template);
+    }
+}
+
+window.insertTemplate = insertTemplate;

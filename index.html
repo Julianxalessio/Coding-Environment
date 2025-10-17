@@ -170,6 +170,20 @@
                 <div id="FilesContainer2"></div>
             </div>
             <div class="Buttons">
+                <div class="template-insert">
+                    <select id="codeTemplates">
+                        <option value="if">If Block (incase)</option>
+                        <option value="during">During Loop</option>
+                        <option value="func">Function Definition</option>
+                        <option value="set">Set Variable</option>
+                        <option value="write">Write Output</option>
+                        <option value="call">Call Function</option>
+                        <option value="reset">Redefine Variable</option>
+                        <option value="connect">Connect File</option>
+                        <option value="comment">Add Comment</option>
+                    </select>
+                    <button onclick="insertTemplate()">Insert</button>
+                </div>
                 <button onclick="SaveFile()" id="SaveBtn">Save</button>
                 <button onclick="RunCode()" id="RunButton">Run</button>
             </div>
@@ -231,18 +245,20 @@
         });
 
         window.addEventListener('beforeunload', function (e) {
-            // Nachricht für den Benutzer (wird in modernen Browsern oft ignoriert oder ersetzt)
-            const confirmationMessage =
-                "Bist du sicher, dass du die Seite verlassen möchtest? Nicht gespeicherte Daten könnten verloren gehen.";
+            if (!e.defaultPrevented) {
+                const confirmationMessage = "Bist du sicher, dass du die Seite verlassen möchtest? Nicht gespeicherte Daten könnten verloren gehen.";
+                
+                e.preventDefault();
+                e.returnValue = confirmationMessage;
 
-            // Standardaktion verhindern
-            e.preventDefault();
-
-            // Manche Browser benötigen diese Zuweisung, um den Dialog anzuzeigen
-            e.returnValue = confirmationMessage;
-
-            // Für ältere Browser
-            return confirmationMessage;
+                // Clear fields only if user confirms leaving
+                if (e.returnValue) {
+                    document.getElementById("InputScript").value = "";
+                    document.getElementById("Output").value = "";
+                }
+                
+                return confirmationMessage;
+            }
         });
 
         // ============================= Other Functions ============================    

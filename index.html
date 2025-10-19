@@ -5,412 +5,94 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
-    <link rel="stylesheet" href="CloseButton.css">
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="Classes.css">
+    <link rel="stylesheet" href="CSS/CloseButton.css">
+    <link rel="stylesheet" href="CSS/style.css">
+    <link rel="stylesheet" href="CSS/Classes.css">
     <title>Coding-Environment</title>
-    <style>
-    </style>
 </head>
 
 <body>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getDatabase, ref, set, get, child, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";        
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyChvPU8blLsvMTUq5LO0dDewMiDzZhVx4M",
-            authDomain: "coding-environment-1df0d.firebaseapp.com",
-            databaseURL: "https://coding-environment-1df0d-default-rtdb.firebaseio.com/",
-            projectId: "coding-environment-1df0d",
-            storageBucket: "coding-environment-1df0d.firebasestorage.app",
-            messagingSenderId: "500351380812",
-            appId: "1:500351380812:web:48e77ef8e5a46dc5b0b3e9",
-            measurementId: "G-FMDTP8GK8X"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        window.creatUser = function (UserName, password) {
-            const dbRef = ref(db, `users/${UserName}`);
-            set(dbRef, {
-                Password: password
-            }).then(() => {
-                console.log("User created!");
-                LoginedUser = UserName;
-                document.getElementById("UserName").innerHTML = UserName;
-                OpenLoginSite();
-                const FilesContainer = document.getElementById("FilesContainer2");
-                FilesContainer.innerHTML = "";
-            }).catch((error) => {
-                console.error("Fehler beim Speichern:", error);
-            });
-        };
-
-        window.SaveFileToFirebase = function () {
-            if (!LoginedUser) {
-                alert("Not logged in");
-                return;
-            }
-            if (!ActiveFile) {
-                alert("No file selected or created!");
-                return;
-            }
-            const UserName = LoginedUser;
-            const FileName = ActiveFile;
-            const FileContent = document.getElementById("InputScript").value;
-            const dbRef = ref(db, `users/${UserName}/Files/${FileName}`);
-
-            if (UserName == "" || FileName == ""){
-                alert("Error")
-            }
-            else{
-                set(dbRef, {
-                    Content: FileContent
-                }).then(() => {
-                    console.log("File saved!");
-                }).catch((error) => {
-                    console.error("Fehler beim Speichern:", error);
-                });
-            }
-        };
-        
-        window.CreateFileOnFirebase = function (FileName) {
-            if (!LoginedUser) {
-                alert("Not logged in");
-                return;
-            }
-
-            const UserName = LoginedUser;
-            const FileContent = "";
-            const dbRef = ref(db, `users/${UserName}/Files/${FileName}`);
-
-            if (UserName == "" || FileName == ""){
-                alert("Error")
-            }
-            else{
-                set(dbRef, {
-                    Content: FileContent
-                }).then(() => {
-                    console.log("File saved!");
-                }).catch((error) => {
-                    console.error("Fehler beim Speichern:", error);
-                });
-            }
-            };
-        
-        window.LoadFiles = function () {
-            const db = getDatabase();
-            const UserName = LoginedUser;
-            const filesRef = ref(db, `users/${UserName}/Files`);
-
-            onValue(filesRef, (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                Object.keys(data).forEach(fileName => {
-                    const file = data[fileName];                
-                    CreateFileFromFirebase(fileName, file.Content);
-                });
-            } else {
-                console.log("Keine Dateien gefunden.");
-            }
-        });
-        }
-
-        window.login = function (InputUser, InputPassword) {
-            get(child(ref(db), `users/${InputUser}/Password`))
-                .then((snapshot) => {
-                if (snapshot.exists()) {
-                    const password = snapshot.val();
-                    if (InputPassword == password){
-                        LoginedUser = InputUser;
-                        document.getElementById("UserName").innerHTML = InputUser;
-                        const FilesContainer = document.getElementById("FilesContainer2");
-                        FilesContainer.innerHTML = "";
-                        OpenLoginSite();
-                        LoadFiles();
-                        
-                    }
-                    else{
-                        alert("Wrong Password");
-                    }
-                } else {
-                    alert("Benutzer nicht gefunden");
-                }
-                })
-            .catch((error) => {
-                console.error("Fehler beim Abrufen:", error);
-            });
-        };
-        
-        window.RemoveFile = function (FileName){
-            const UserName = LoginedUser;
-            let pathToDelete = `users/${UserName}/Files/${FileName}`
-            remove(ref(db, pathToDelete))
-            .then(() => {
-                console.log("Daten erfolgreich gelöscht.");
-            })
-            .catch((error) => {
-                console.error("Fehler beim Löschen:", error);
-            })
-        }
-    </script>
+    <script src="JS/firebase.js" type="module"></script>
     <div class="Container">
         <div class="LeftSide">
-            <textarea id="InputScript" placeholder="Code:"></textarea>
+            <div class="code-editor">
+                <pre class="highlight" aria-hidden="true"><code id="highlight"></code></pre>
+                <textarea id="editor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"
+                    placeholder="Type code here..."></textarea>
+            </div>
             <textarea readonly id="Output" placeholder="Output:"></textarea>
         </div>
+        <div data-include="HTML/rightSide.html"></div>
+    </div>
+    <div data-include="HTML/loginPage.html"></div>
+    <script src="JS/includeFragments.js"></script>
 
-        <div class="RightSide">
-            <h3 id="UserName" class="UserName" onclick="OpenLoginSite()">Login</h3>
-            <div class="FilesContainer">
-                <button class="NewFileBtn" onclick="CreateFile()">Create</button>
-                <input id="FileNameInput" class="NewFileNameInput" type="text" placeholder="Name:">
-                <div id="FilesContainer2"></div>
-            </div>
-            <div class="Buttons">
-                <div class="template-insert">
-                    <select id="codeTemplates">
-                        <option value="if">If Block (incase)</option>
-                        <option value="during">During Loop</option>
-                        <option value="func">Function Definition</option>
-                        <option value="set">Set Variable</option>
-                        <option value="write">Write Output</option>
-                        <option value="call">Call Function</option>
-                        <option value="reset">Redefine Variable</option>
-                        <option value="connect">Connect File</option>
-                        <option value="comment">Add Comment</option>
-                    </select>
-                    <button onclick="insertTemplate()">Insert</button>
-                </div>
-                <button onclick="SaveFile()" id="SaveBtn">Save</button>
-                <button onclick="RunCode()" id="RunButton">Run</button>
-            </div>
-        </div>
-    </div>
-    <div id="LoginSite" class="None">
-        <div id="LoginContainer">
-            <h3>Login</h3> <input type="text" placeholder="Username" id="LoginInputName"> <input type="password"
-                placeholder="Passwort" id="LoginInputPassword"> <button onclick="togglePasswordLogin()"
-                id="TogglePasswordButtonLogin"> <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20"
-                    height="20" fill="none" stroke="black" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round" viewBox="0 0 24 24">
-                    <path
-                        d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8 a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
-                    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-                    <line x1="3" y1="3" x2="21" y2="21" /> </svg> </button> <button id="LoginButton"
-                onclick="loginEntered()">Login</button>
-        </div>
-        <div id="RegisterContainer">
-            <h3>Register</h3> <input type="text" placeholder="Username" id="RegisterInputName"> <input type="password"
-                id="RegisterInputPassword" placeholder="Passwort"> <button onclick="togglePasswordRegister()"
-                id="TogglePasswordButtonRegister"> <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20"
-                    height="20" fill="none" stroke="black" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round" viewBox="0 0 24 24">
-                    <path
-                        d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8 a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
-                    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-                    <line x1="3" y1="3" x2="21" y2="21" /> </svg> </button> <button id="RegisterButton"
-                onclick="registerEntered()">Register</button>
-        </div>
-        <h2 onclick="OpenLoginSite()" id="CloseButton">X</h2>
-    </div>
+    <link rel="stylesheet" href="CSS/highlighter.css">
 
     <script>
-        // ============================= Variables ============================
-        let LoginedUser;
-        let Login = false;
-        let ActiveFile;
-        let Files = {};
+    (function initHighlighter(){
+      function start() {
+        const editor = document.getElementById('editor');
+        const highlight = document.getElementById('highlight');
+        if (!editor || !highlight) return; // nothing to do
 
-        // ============================= EventListeners ============================
+        const keywords = ['set','write','incase','func','call','connect','hallo'];
+        const kwPattern = '\\b(' + keywords.join('|') + ')\\b';
+        const regex = new RegExp(
+          [
+            /("([^"\\]|\\.)*")/.source,        // double-quoted strings
+            /(\/\/.*$)/.source,                // line comments
+            kwPattern                          // keywords
+          ].join('|'),
+          'gm'
+        );
 
-        LoginContainer.addEventListener('keypress', function (e) {
-            if (e.key === "Enter") {
-                loginEntered();
-            }
-        });
-
-        RegisterContainer.addEventListener('keypress', function (e) {
-            if (e.key === "Enter") {
-                registerEntered();
-            }
-        });
-
-        FileNameInput.addEventListener('keypress', function (e) {
-            if (e.key === "Enter") {
-                CreateFile();
-            }
-        });
-
-        window.addEventListener('beforeunload', function (e) {
-            if (!e.defaultPrevented) {
-                const confirmationMessage = "Bist du sicher, dass du die Seite verlassen möchtest? Nicht gespeicherte Daten könnten verloren gehen.";
-                
-                e.preventDefault();
-                e.returnValue = confirmationMessage;
-
-                // Clear fields only if user confirms leaving
-                if (e.returnValue) {
-                    document.getElementById("InputScript").value = "";
-                    document.getElementById("Output").value = "";
-                }
-                
-                return confirmationMessage;
-            }
-        });
-
-        // ============================= Other Functions ============================    
-        function SaveFile() {
-            const UserName = LoginedUser;
-            const FileName = ActiveFile;
-            const FileContent = document.getElementById("InputScript").value;
-            if (FileName == undefined) {
-                alert("No file selected");
-            } else {
-                Files[FileName] = FileContent;
-                SaveFileToFirebase()
-                alert("Sucessfuly saved");
-            }
+        function escapeHtml(str) {
+          return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         }
 
-        function CreateFileFromFirebase(Name, Content) {
-            if (LoginedUser == null) {
-                alert("Not loged in")
-            } else {
-                // Prevent duplicate file divs
-                if (document.getElementById(Name)) return;
-
-                const FilesContainer = document.getElementById("FilesContainer2");
-
-                let newFileDiv = document.createElement("div");
-                newFileDiv.className = "File";
-                newFileDiv.id = Name;
-
-                let newFileName = document.createElement("h4");
-                newFileName.className = "FileName";
-                newFileName.textContent = Name;
-
-                let newFileHitbox = document.createElement("div");
-                newFileHitbox.className = "FileHitbox"
-                newFileHitbox.setAttribute("onclick", "LoadFileContent(this)")
-
-                let deleteBtn = document.createElement("button");
-                deleteBtn.className = "btn btn-delete";
-                deleteBtn.innerHTML = `<span class="mdi mdi-delete"></span> <span>Delete</span>`;
-                deleteBtn.onclick = function () {
-                    newFileDiv.remove();
-                    delete Files[Name];
-                    RemoveFile(Name);
-                };
-
-                newFileDiv.appendChild(newFileHitbox);
-                newFileHitbox.appendChild(newFileName);
-                newFileDiv.appendChild(deleteBtn);
-
-                document.querySelector(".NewFileNameInput").value = "";
-
-                FilesContainer.appendChild(newFileDiv);
-                Files[Name] = Content;
-            }
+        function highlightCode(text) {
+          let escaped = escapeHtml(text);
+          return escaped.replace(regex, (match, str, _1, comment, kw) => {
+            if (str !== undefined) return '<span class="token string">' + escapeHtml(str) + '</span>';
+            if (comment !== undefined) return '<span class="token comment">' + escapeHtml(comment) + '</span>';
+            if (kw !== undefined) return '<span class="token keyword">' + escapeHtml(kw) + '</span>';
+            return match;
+          }).replace(/\n/g, '<br>').replace(/ {2}/g, '&nbsp;&nbsp;');
         }
 
-        function CreateFile() {
-            let Name = document.querySelector(".NewFileNameInput").value;
-            if (Name == "") {
-                alert("Insert a name for the file");
-            } else {
-                if (LoginedUser == null) {
-                    alert("Not loged in")
-                } else {
-                    const fileExists = Object.keys(Files).some(key => key.toLowerCase() === Name.toLowerCase());
-                    if (!fileExists) {
-                        const FilesContainer = document.getElementById("FilesContainer2");
-
-                        let newFileDiv = document.createElement("div");
-                        newFileDiv.className = "File";
-                        newFileDiv.id = Name;
-
-                        let newFileName = document.createElement("h4");
-                        newFileName.className = "FileName";
-                        newFileName.textContent = Name;
-
-                        let newFileHitbox = document.createElement("div");
-                        newFileHitbox.className = "FileHitbox"
-                        newFileHitbox.setAttribute("onclick", "LoadFileContent(this)")
-
-                        let deleteBtn = document.createElement("button");
-                        deleteBtn.className = "btn btn-delete";
-                        deleteBtn.innerHTML = `<span class="mdi mdi-delete"></span> <span>Delete</span>`;
-                        deleteBtn.onclick = function () {
-                            newFileDiv.remove();
-                            delete Files[Name];
-                            RemoveFile(Name);
-                        };
-
-                        newFileDiv.appendChild(newFileHitbox);
-                        newFileHitbox.appendChild(newFileName);
-                        newFileDiv.appendChild(deleteBtn);
-
-                        document.querySelector(".NewFileNameInput").value = "";
-
-                        FilesContainer.appendChild(newFileDiv);
-                        Files[Name] = "";
-                        CreateFileOnFirebase(Name);
-                    } else {
-                        alert("File with that name already exists");
-                    }
-                }
-            }
+        function syncScroll() {
+          highlight.parentElement.scrollTop = editor.scrollTop;
+          highlight.parentElement.scrollLeft = editor.scrollLeft;
         }
 
-        function LoadFileContent(Parent) {
-            const FileName = Parent.parentElement.id;
-            if (ActiveFile != FileName) {
-                if (ActiveFile != undefined) {
-                    let ContentOfActiveFile = Files[ActiveFile];
-                    let ContentOfInput = document.getElementById("InputScript").value;
-                    if (ContentOfActiveFile != ContentOfInput) {
-                        let Antwort = confirm("Do you want to continue without saving?");
-                        if (Antwort == false) {
-                            return
-                        } else {
-                            let Content = Files[FileName];
-                            document.getElementById("InputScript").value = Content;
-                            const AllFiles = document.querySelectorAll(".File");
-                            AllFiles.forEach(element => {
-                                element.classList.remove("active");
-                            });
-                            document.getElementById(FileName).className = "File active";
-                            ActiveFile = FileName;
-                        }
-                    } else {
-                        let Content = Files[FileName];
-                        document.getElementById("InputScript").value = Content;
-                        const AllFiles = document.querySelectorAll(".File");
-                        AllFiles.forEach(element => {
-                            element.classList.remove("active");
-                        });
-                        document.getElementById(FileName).className = "File active";
-                        ActiveFile = FileName;
-                    }
-                } else {
-                    let Content = Files[FileName];
-                    document.getElementById("InputScript").value = Content;
-                    const AllFiles = document.querySelectorAll(".File");
-                    AllFiles.forEach(element => {
-                        element.classList.remove("active");
-                    });
-                    document.getElementById(FileName).className = "File active";
-                    ActiveFile = FileName;
-                }
-                document.getElementById("Output").value = "";
-            }
+        function update() {
+          const text = editor.value || '';
+          highlight.innerHTML = '<code>' + highlightCode(text) + '</code>';
+          syncScroll();
         }
+
+        editor.addEventListener('input', update);
+        editor.addEventListener('scroll', syncScroll);
+
+        // initialize now (and again after includes if needed)
+        update();
+
+        // if fragments change editor content later, call update() after setting editor.value
+        window.updateHighlighter = update;
+      }
+
+      // wait for DOMContentLoaded to ensure includeFragments has run
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', start);
+      } else {
+        start();
+      }
+    })();
     </script>
-    <script src="LoginFunctions.js"></script>
-    <script src="Jal.js"></script>
+
+    <script src="JS/LoginFunctions.js"></script>
+    <script src="JS/Jal.js"></script>
 </body>
 
 </html>

@@ -1,0 +1,26 @@
+<div class="RightSide">
+    <h3 id="UserName" class="UserName" onclick="OpenLoginSite()">Login</h3>
+    <div class="FilesContainer">
+        <button class="NewFileBtn" onclick="CreateFile()">Create</button>
+        <input id="FileNameInput" class="NewFileNameInput" type="text" placeholder="Name:">
+        <div id="FilesContainer2"></div>
+    </div>
+    <div class="Buttons">
+        <div class="template-insert">
+            <select name="codeTemplates" id="codeTemplates">
+                <option value="if">If Block (incase)</option>
+                <option value="during">During Loop</option>
+                <option value="func">Function Definition</option>
+                <option value="set">Set Variable</option>
+                <option value="write">Write Output</option>
+                <option value="call">Call Function</option>
+                <option value="reset">Redefine Variable</option>
+                <option value="connect">Connect File</option>
+                <option value="comment">Add Comment</option>
+            </select>
+            <button onclick="insertTemplate()">Insert</button>
+        </div>
+        <button onclick="SaveFile()" id="SaveBtn">Save</button>
+        <button onclick="RunCode()" id="RunButton">Run</button>
+    </div>
+</div>

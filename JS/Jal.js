@@ -6,6 +6,24 @@ function log(msg) {
     document.getElementById("Output").value += msg + "\n";
 }
 
+// new helper: get plain text from the highlighted editor area
+function getEditorText() {
+    const editorEl = document.getElementById("editor");
+    if (editorEl && 'value' in editorEl) {
+        return editorEl.value;
+    }
+    const highlight = document.getElementById("highlight");
+    if (!highlight) return "";
+    // highlight contains HTML with <br> and &nbsp; — convert back to plain text
+    let html = highlight.innerHTML || "";
+    html = html.replace(/<br\s*\/?>/gi, "\n");
+    html = html.replace(/&nbsp;/g, " ");
+    // strip remaining tags
+    const tmp = document.createElement("div");
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || "";
+}
+
 function exprWithVars(expr) {
     return expr.replace(/\b\w+\b/g, word =>
         variables.hasOwnProperty(word) ? variables[word] : word
@@ -166,15 +184,16 @@ function RunCode() {
     variables = {};
     functions = {};
 
-    const linesN = document.getElementById("InputScript").value.split("\n");
-    const lines = linesN; // use the array returned by split; don't call trim() on it
+    // use the highlighted editor as the input source
+    const editorText = getEditorText();
+    const lines = editorText.split("\n");
     let i = 0;
 
     while (i < lines.length) {
         const result = interpret(lines[i], lines, i);
 
         if (result === "inserted") {
-            i++; // <-- Add this line to avoid infinite loop
+            i++; // <-- keep this to avoid infinite loops when inserting blocks
         } else if (Array.isArray(result) && result[0] === "start_function") {
             const funcName = result[1];
             i++;
@@ -207,18 +226,25 @@ function loadExternalFile(filename, content) {
 // Add this function after loadExternalFile
 
 function insertCodeAtCursor(codeBlock) {
-    const input = document.getElementById("InputScript");
-    const startPos = input.selectionStart;
-    const endPos = input.selectionEnd;
+    const input = document.getElementById("editor") || document.getElementById("InputScript");
+    if (!input) return;
+
+    const startPos = typeof input.selectionStart === 'number' ? input.selectionStart : input.value.length;
+    const endPos = typeof input.selectionEnd === 'number' ? input.selectionEnd : startPos;
     const beforeText = input.value.substring(0, startPos);
     const afterText = input.value.substring(endPos);
 
     input.value = beforeText + codeBlock + afterText;
-    
+
     // Place cursor after inserted code
     const newCursorPos = startPos + codeBlock.length;
-    input.setSelectionRange(newCursorPos, newCursorPos);
+    if (typeof input.setSelectionRange === 'function') {
+        input.setSelectionRange(newCursorPos, newCursorPos);
+    }
     input.focus();
+
+    // trigger highlighting update if editor uses an input listener
+    input.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
 // Make it available globally

@@ -287,7 +287,6 @@ textarea {
     border: 1px solid rgba(0,0,0,0.04);
     transition: transform var(--transition), box-shadow var(--transition);
 }
-.File:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(2,6,23,0.06); cursor: pointer; }
 
 .FileName { font-size: 1rem; margin:0; color: #0b1220; }
 

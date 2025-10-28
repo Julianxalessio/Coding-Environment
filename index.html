@@ -12,7 +12,223 @@
 </head>
 
 <body>
-    <script src="JS/firebase.js" type="module"></script>
+    <script type="module">
+        import {
+            initializeApp
+        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import {
+            getDatabase,
+            ref,
+            set,
+            get,
+            child,
+            remove,
+            onValue
+        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyChvPU8blLsvMTUq5LO0dDewMiDzZhVx4M",
+            authDomain: "coding-environment-1df0d.firebaseapp.com",
+            databaseURL: "https://coding-environment-1df0d-default-rtdb.firebaseio.com/",
+            projectId: "coding-environment-1df0d",
+            storageBucket: "coding-environment-1df0d.firebasestorage.app",
+            messagingSenderId: "500351380812",
+            appId: "1:500351380812:web:48e77ef8e5a46dc5b0b3e9",
+            measurementId: "G-FMDTP8GK8X"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // ensure globals used by non-module scripts and inline handlers exist
+        window.LoginedUser = window.LoginedUser || "";
+        window.ActiveFile = window.ActiveFile || undefined;
+        window.Files = window.Files || {};
+
+        window.creatUser = function (UserName, password) {
+            const dbRef = ref(db, `users/${UserName}`);
+            set(dbRef, {
+                Password: password
+            }).then(() => {
+                console.log("User created!");
+                window.LoginedUser = UserName;
+                document.getElementById("UserName").innerHTML = UserName;
+                OpenLoginSite();
+                const FilesContainer = document.getElementById("FilesContainer2");
+                FilesContainer.innerHTML = "";
+            }).catch((error) => {
+                console.error("Fehler beim Speichern:", error);
+            });
+        };
+
+        function SaveFile() {
+            const UserName = window.LoginedUser;
+            const FileName = window.ActiveFile;
+            const FileContent = document.getElementById("editor").value; // <- use editor
+            if (FileName == undefined) {
+                alert("No file selected");
+            } else {
+                window.Files[FileName] = FileContent;
+                SaveFileToFirebase()
+                alert("Sucessfuly saved");
+            }
+        }
+
+        window.SaveFileToFirebase = function () {
+            if (!window.LoginedUser) {
+                alert("Not logged in");
+                return;
+            }
+            if (!window.ActiveFile) {
+                alert("No file selected or created!");
+                return;
+            }
+            const UserName = window.LoginedUser;
+            const FileName = window.ActiveFile;
+            const FileContent = document.getElementById("editor").value; // <- use editor
+            const dbRef = ref(db, `users/${UserName}/Files/${FileName}`);
+
+            if (UserName == "" || FileName == "") {
+                alert("Error")
+            } else {
+                set(dbRef, {
+                    Content: FileContent
+                }).then(() => {
+                    console.log("File saved!");
+                }).catch((error) => {
+                    console.error("Fehler beim Speichern:", error);
+                });
+            }
+        };
+
+        window.CreateFileOnFirebase = function (FileName) {
+            if (!window.LoginedUser) {
+                alert("Not logged in");
+                return;
+            }
+
+            const UserName = window.LoginedUser;
+            const FileContent = document.getElementById("editor").value; // <- use editor
+            const dbRef = ref(db, `users/${UserName}/Files/${FileName}`);
+
+            if (UserName == "" || FileName == "") {
+                alert("Error")
+            } else {
+                set(dbRef, {
+                    Content: FileContent
+                }).then(() => {
+                    console.log("File saved!");
+                }).catch((error) => {
+                    console.error("Fehler beim Speichern:", error);
+                });
+            }
+        };
+
+        window.LoadFiles = function () {
+            const db = getDatabase();
+            const UserName = window.LoginedUser;
+            const filesRef = ref(db, `users/${UserName}/Files`);
+
+            onValue(filesRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    Object.keys(data).forEach(fileName => {
+                        const file = data[fileName];
+                        CreateFileFromFirebase(fileName, file.Content);
+                    });
+                } else {
+                    console.log("Keine Dateien gefunden.");
+                }
+            });
+        }
+
+        window.login = function (InputUser, InputPassword) {
+            get(child(ref(db), `users/${InputUser}/Password`))
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const password = snapshot.val();
+                        if (InputPassword == password) {
+                            window.LoginedUser = InputUser;
+                            document.getElementById("UserName").innerHTML = InputUser;
+                            const FilesContainer = document.getElementById("FilesContainer2");
+                            FilesContainer.innerHTML = "";
+                            OpenLoginSite();
+                            LoadFiles();
+
+                        } else {
+                            alert("Wrong Password");
+                        }
+                    } else {
+                        alert("Benutzer nicht gefunden");
+                    }
+                })
+                .catch((error) => {
+                    console.error("Fehler beim Abrufen:", error);
+                });
+        };
+
+        window.RemoveFile = function (FileName) {
+            const UserName = window.LoginedUser;
+            let pathToDelete = `users/${UserName}/Files/${FileName}`
+            remove(ref(db, pathToDelete))
+                .then(() => {
+                    console.log("Daten erfolgreich gelöscht.");
+                })
+                .catch((error) => {
+                    console.error("Fehler beim Löschen:", error);
+                })
+        }
+
+        function LoadFileContent(Parent) {
+            const FileName = Parent.parentElement.id;
+            if (window.ActiveFile != FileName) {
+                if (window.ActiveFile != undefined) {
+                    let ContentOfActiveFile = window.Files[window.ActiveFile];
+                    let ContentOfInput = document.getElementById("editor").value; // <- use editor
+                    if (ContentOfActiveFile != ContentOfInput) {
+                        let Antwort = confirm("Do you want to continue without saving?");
+                        if (Antwort == false) {
+                            return
+                        } else {
+                            let Content = window.Files[FileName];
+                            const editorEl = document.getElementById("editor");
+                            editorEl.value = Content; // set editor value
+                            editorEl.dispatchEvent(new Event('input')); // refresh highlight
+                            const AllFiles = document.querySelectorAll(".File");
+                            AllFiles.forEach(element => {
+                                element.classList.remove("active");
+                            });
+                            document.getElementById(FileName).className = "File active";
+                            window.ActiveFile = FileName;
+                        }
+                    } else {
+                        let Content = window.Files[FileName];
+                        const editorEl = document.getElementById("editor");
+                        editorEl.value = Content; // set editor value
+                        editorEl.dispatchEvent(new Event('input')); // refresh highlight
+                        const AllFiles = document.querySelectorAll(".File");
+                        AllFiles.forEach(element => {
+                            element.classList.remove("active");
+                        });
+                        document.getElementById(FileName).className = "File active";
+                        window.ActiveFile = FileName;
+                    }
+                } else {
+                    let Content = window.Files[FileName];
+                    const editorEl = document.getElementById("editor");
+                    editorEl.value = Content; // set editor value
+                    editorEl.dispatchEvent(new Event('input')); // refresh highlight
+                    const AllFiles = document.querySelectorAll(".File");
+                    AllFiles.forEach(element => {
+                        element.classList.remove("active");
+                    });
+                    document.getElementById(FileName).className = "File active";
+                    window.ActiveFile = FileName;
+                }
+            }
+        }
+
+    </script>
     <div class="Container">
         <div class="LeftSide">
             <div class="code-editor">
@@ -22,10 +238,61 @@
             </div>
             <textarea readonly id="Output" placeholder="Output:"></textarea>
         </div>
-        <div data-include="HTML/rightSide.html"></div>
+        <div class="RightSide">
+            <h3 id="UserName" class="UserName" onclick="OpenLoginSite()">Login</h3>
+            <div class="FilesContainer">
+                <button class="NewFileBtn" onclick="CreateFile()">Create</button>
+                <input id="FileNameInput" class="NewFileNameInput" type="text" placeholder="Name:">
+                <div id="FilesContainer2"></div>
+            </div>
+            <div class="Buttons">
+                <div class="template-insert">
+                    <select name="codeTemplates" id="codeTemplates">
+                        <option value="if">If Block (incase)</option>
+                        <option value="during">During Loop</option>
+                        <option value="func">Function Definition</option>
+                        <option value="set">Set Variable</option>
+                        <option value="write">Write Output</option>
+                        <option value="call">Call Function</option>
+                        <option value="reset">Redefine Variable</option>
+                        <option value="connect">Connect File</option>
+                        <option value="comment">Add Comment</option>
+                        <option value="wait">Wait/Pause</option>
+                        <option value="input">Input Variable</option>
+                        <option value="random">Random Number</option>
+                    </select>
+                    <button onclick="insertTemplate()">Insert</button>
+                </div>
+                <button onclick="SaveFile()" id="SaveBtn">Save</button>
+                <button id="RunButton">Run</button>
+            </div>
+        </div>
     </div>
-    <div data-include="HTML/loginPage.html"></div>
-    <script src="JS/includeFragments.js"></script>
+    <div id="LoginSite" class="None">
+        <div id="LoginContainer">
+            <h3>Login</h3> <input type="text" placeholder="Username" id="LoginInputName"> <input type="password"
+                placeholder="Passwort" id="LoginInputPassword"> <button onclick="togglePasswordLogin()"
+                id="TogglePasswordButtonLogin"> <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20"
+                    height="20" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    viewBox="0 0 24 24">
+                    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8 a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
+                    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                    <line x1="3" y1="3" x2="21" y2="21" /> </svg> </button> <button id="LoginButton"
+                onclick="loginEntered()">Login</button>
+        </div>
+        <div id="RegisterContainer">
+            <h3>Register</h3> <input type="text" placeholder="Username" id="RegisterInputName"> <input type="password"
+                id="RegisterInputPassword" placeholder="Passwort"> <button onclick="togglePasswordRegister()"
+                id="TogglePasswordButtonRegister"> <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20"
+                    height="20" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    viewBox="0 0 24 24">
+                    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8 a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
+                    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                    <line x1="3" y1="3" x2="21" y2="21" /> </svg> </button> <button id="RegisterButton"
+                onclick="registerEntered()">Register</button>
+        </div>
+        <h2 onclick="OpenLoginSite()" id="CloseButton">X</h2>
+    </div>
 
     <link rel="stylesheet" href="CSS/highlighter.css">
 
@@ -91,7 +358,69 @@
     })();
     </script>
 
-    <script src="JS/LoginFunctions.js"></script>
+    <script>
+        const eyeSVG = `
+            <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+            stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            viewBox="0 0 24 24">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+            <circle cx="12" cy="12" r="3" />
+            </svg>
+        `;
+
+        const eyeOffSVG = `
+            <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+            stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            viewBox="0 0 24 24">
+            <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8
+                    a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
+            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+            <line x1="3" y1="3" x2="21" y2="21" />
+            </svg>
+            `;
+
+        function togglePasswordRegister() {
+            const input = document.getElementById("RegisterInputPassword");
+            const button = document.getElementById("TogglePasswordButtonRegister");
+
+            if (input.type === "password") {
+                input.type = "text";
+                button.innerHTML = eyeSVG;
+            } else {
+                input.type = "password";
+                button.innerHTML = eyeOffSVG;
+            }
+        }
+
+        function togglePasswordLogin() {
+            const input = document.getElementById("LoginInputPassword");
+            const button = document.getElementById("TogglePasswordButtonLogin");
+
+            if (input.type === "password") {
+                input.type = "text";
+                button.innerHTML = eyeSVG;
+            } else {
+                input.type = "password";
+                button.innerHTML = eyeOffSVG;
+            }
+        }
+
+        function loginEntered() {
+            UserName = document.getElementById("LoginInputName").value;
+            Password = document.getElementById("LoginInputPassword").value;
+            login(UserName, Password);
+        }
+
+        function registerEntered() {
+            UserName = document.getElementById("RegisterInputName").value;
+            Password = document.getElementById("RegisterInputPassword").value;
+            creatUser(UserName, Password);
+        }
+
+        function OpenLoginSite() {
+                    document.getElementById("LoginSite").classList.toggle("None");
+        }
+    </script>
     <script src="JS/Jal.js"></script>
 </body>
 

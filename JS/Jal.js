@@ -47,8 +47,6 @@ function exprWithVars(expr) {
     return replaced;
 }
 
-
-
 // make interpretBlock async and await interpret calls
 async function interpretBlock(lines, startIndex) {
     let i = startIndex;
@@ -231,8 +229,8 @@ async function interpret(line, lines, currentIndex) {
     }
 
     // Add logging for empty lines and comments
-    else if (line.startsWith("//")) {
-        console.log(`Skipping "comment": ${line}`);
+    else if (line.startsWith("//") || line === "") {
+        console.log(`Skipping "comment": ${line} or empty line`);
         return null;
     }
 

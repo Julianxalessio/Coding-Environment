@@ -193,7 +193,6 @@
                             let Content = window.Files[FileName];
                             const editorEl = document.getElementById("editor");
                             editorEl.value = Content; // set editor value
-                            editorEl.dispatchEvent(new Event('input')); // refresh highlight
                             const AllFiles = document.querySelectorAll(".File");
                             AllFiles.forEach(element => {
                                 element.classList.remove("active");
@@ -205,7 +204,6 @@
                         let Content = window.Files[FileName];
                         const editorEl = document.getElementById("editor");
                         editorEl.value = Content; // set editor value
-                        editorEl.dispatchEvent(new Event('input')); // refresh highlight
                         const AllFiles = document.querySelectorAll(".File");
                         AllFiles.forEach(element => {
                             element.classList.remove("active");
@@ -217,7 +215,6 @@
                     let Content = window.Files[FileName];
                     const editorEl = document.getElementById("editor");
                     editorEl.value = Content; // set editor value
-                    editorEl.dispatchEvent(new Event('input')); // refresh highlight
                     const AllFiles = document.querySelectorAll(".File");
                     AllFiles.forEach(element => {
                         element.classList.remove("active");
@@ -231,11 +228,8 @@
     </script>
     <div class="Container">
         <div class="LeftSide">
-            <div class="code-editor">
-                <pre class="highlight" aria-hidden="true"><code id="highlight"></code></pre>
                 <textarea id="editor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"
                     placeholder="Type code here..."></textarea>
-            </div>
             <textarea readonly id="Output" placeholder="Output:"></textarea>
         </div>
         <div class="RightSide">
@@ -295,68 +289,6 @@
     </div>
 
     <link rel="stylesheet" href="CSS/highlighter.css">
-
-    <script>
-    (function initHighlighter(){
-      function start() {
-        const editor = document.getElementById('editor');
-        const highlight = document.getElementById('highlight');
-        if (!editor || !highlight) return; // nothing to do
-
-        const keywords = ['set','write','incase','func','call','connect','hallo'];
-        const kwPattern = '\\b(' + keywords.join('|') + ')\\b';
-        const regex = new RegExp(
-          [
-            /("([^"\\]|\\.)*")/.source,        // double-quoted strings
-            /(\/\/.*$)/.source,                // line comments
-            kwPattern                          // keywords
-          ].join('|'),
-          'gm'
-        );
-
-        function escapeHtml(str) {
-          return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        }
-
-        function highlightCode(text) {
-          let escaped = escapeHtml(text);
-          return escaped.replace(regex, (match, str, _1, comment, kw) => {
-            if (str !== undefined) return '<span class="token string">' + escapeHtml(str) + '</span>';
-            if (comment !== undefined) return '<span class="token comment">' + escapeHtml(comment) + '</span>';
-            if (kw !== undefined) return '<span class="token keyword">' + escapeHtml(kw) + '</span>';
-            return match;
-          }).replace(/\n/g, '<br>').replace(/ {2}/g, '&nbsp;&nbsp;');
-        }
-
-        function syncScroll() {
-          highlight.parentElement.scrollTop = editor.scrollTop;
-          highlight.parentElement.scrollLeft = editor.scrollLeft;
-        }
-
-        function update() {
-          const text = editor.value || '';
-          highlight.innerHTML = '<code>' + highlightCode(text) + '</code>';
-          syncScroll();
-        }
-
-        editor.addEventListener('input', update);
-        editor.addEventListener('scroll', syncScroll);
-
-        // initialize now (and again after includes if needed)
-        update();
-
-        // if fragments change editor content later, call update() after setting editor.value
-        window.updateHighlighter = update;
-      }
-
-      // wait for DOMContentLoaded to ensure includeFragments has run
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', start);
-      } else {
-        start();
-      }
-    })();
-    </script>
 
     <script>
         const eyeSVG = `

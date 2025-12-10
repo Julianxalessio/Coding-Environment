@@ -168,18 +168,6 @@ textarea {
     gap: 10px;
 }
 
-/* Input-Code groß und breit */
-#InputScript {
-    width: 100%;
-    height: 300px;
-    font-size: 1.2em;
-    padding: 10px;
-    border-radius: 10px;
-    border: 1px solid #ccc;
-    resize: vertical;
-    box-sizing: border-box;
-}
-
 /* Output darunter */
 #Output {
     resize: none !important;  
@@ -351,62 +339,24 @@ textarea {
     min-width: 80px;
 }
 
-/* code editor overlay + textarea */
-.code-editor {
-  position: relative;
-  width: 100%;
-  height: 400px; /* adjust as needed */
-  box-sizing: border-box;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.code-editor .highlight,
-.code-editor textarea {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 12px;
-  box-sizing: border-box;
+#editor {
   font-family: monospace;
   font-size: 14px;
   line-height: 1.4;
   white-space: pre-wrap;
   word-break: break-word;
   overflow: auto;
-}
-
-/* visible highlighted text */
-.code-editor .highlight {
-  pointer-events: none;
-  z-index: 1;
-  background: #fff;
-  color: transparent; /* base invisible; text appears via spans */
-}
-
-.code-editor .highlight code { color: #111; }
-
-/* make the textarea interactive but hide its visible text */
-.code-editor textarea {
-  z-index: 2;
-  background: transparent;
-  border: 1px solid #e0e6ee;
-  resize: none;
+  width: 100%;
+    height: 500px ;
+    font-size: 1.2em ;
+    padding: 10px ;
+    border-radius: 10px ;
+    border: 1px solid #ccc ;
+    resize: vertical ;
+    box-sizing: border-box ;
+    z-index: 2;
   outline: none;
-  color: transparent;     /* hide duplicate text */
-  caret-color: #000;      /* keep caret visible */
+  color: black;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
-/* ensure selection in textarea remains readable (when user selects) */
-.code-editor textarea::selection {
-  background: rgba(179, 212, 252, 0.9);
-  color: #000;
-}
-
-/* small helper so highlight matches spaces/newlines exactly */
-.code-editor .highlight code { white-space: pre-wrap; word-wrap: break-word; }

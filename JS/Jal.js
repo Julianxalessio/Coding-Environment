@@ -6,24 +6,6 @@ function log(msg) {
     document.getElementById("Output").value += msg + "\n";
 }
 
-// new helper: get plain text from the highlighted editor area
-function getEditorText() {
-    const editorEl = document.getElementById("editor");
-    if (editorEl && 'value' in editorEl) {
-        return editorEl.value;
-    }
-    const highlight = document.getElementById("highlight");
-    if (!highlight) return "";
-    // highlight contains HTML with <br> and &nbsp; — convert back to plain text
-    let html = highlight.innerHTML || "";
-    html = html.replace(/<br\s*\/?>/gi, "\n");
-    html = html.replace(/&nbsp;/g, " ");
-    // strip remaining tags
-    const tmp = document.createElement("div");
-    tmp.innerHTML = html;
-    return tmp.textContent || tmp.innerText || "";
-}
-
 function exprWithVars(expr) {
     // Variablen ersetzen
     let replaced = expr.replace(/\b\w+\b/g, word =>
@@ -38,7 +20,7 @@ function exprWithVars(expr) {
             console.log(`Fehler: Ungültige Argumente für Random(): ${match}`);
             return match; // lässt den Ausdruck unverändert, wenn fehlerhaft
         }
-        return Math.random() * (maxVal - minVal) + minVal;
+        return Math.round(Math.random() * (maxVal - minVal) + minVal);
     });
 
     // Falls nur Random() ohne Parameter vorkommt, Standard 0–1
@@ -247,7 +229,7 @@ async function RunCode() {
     variables = {};
     functions = {};
 
-    const editorText = getEditorText();
+    const editorText = document.getElementById("editor").value;
     const lines = editorText.split("\n");
     let i = 0;
     console.log (lines);

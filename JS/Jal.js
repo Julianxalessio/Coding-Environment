@@ -11,25 +11,8 @@ function exprWithVars(expr) {
     let replaced = expr.replace(/\b\w+\b/g, word =>
         variables.hasOwnProperty(word) ? variables[word] : word
     );
-
-    // Random(min, max) ersetzen
-    replaced = replaced.replace(/Random\(([^,]+),([^)]+)\)/gi, (match, min, max) => {
-        const minVal = parseFloat(min);
-        const maxVal = parseFloat(max);
-        if (isNaN(minVal) || isNaN(maxVal)) {
-            console.log(`Fehler: Ungültige Argumente für Random(): ${match}`);
-            return match; // lässt den Ausdruck unverändert, wenn fehlerhaft
-        }
-        return Math.round(Math.random() * (maxVal - minVal) + minVal);
-    });
-
-    // Falls nur Random() ohne Parameter vorkommt, Standard 0–1
-    replaced = replaced.replace(/Random\(\)/gi, () => Math.random());
-
-    return replaced;
 }
 
-// make interpretBlock async and await interpret calls
 async function interpretBlock(lines, startIndex) {
     let i = startIndex;
     while (i < lines.length) {
@@ -209,10 +192,8 @@ async function interpret(line, lines, currentIndex) {
             log("Fehler bei reSet: " + e.message);
         }
     }
-
-    // Add logging for empty lines and comments
-    else if (line.startsWith("//") || line === "") {
-        console.log(`Skipping "comment": ${line} or empty line`);
+    else if (line === "" || line.startsWith("//") || line.startsWith("}")) {
+        // Leere Zeilen oder Kommentare ignorieren
         return null;
     }
 
@@ -229,7 +210,8 @@ async function RunCode() {
     variables = {};
     functions = {};
 
-    const editorText = document.getElementById("editor").value;
+    // use the highlighted editor as the input source
+    const editorText = getEditorText();
     const lines = editorText.split("\n");
     let i = 0;
     console.log (lines);

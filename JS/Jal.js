@@ -2,6 +2,11 @@ let variables = {};
 let functions = {};
 let externalFiles = {}; // Speichert Inhalte zusätzlicher Dateien
 
+// Random function for use in expressions
+function Random(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 function log(msg) {
     document.getElementById("Output").value += msg + "\n";
 }
@@ -11,6 +16,7 @@ function exprWithVars(expr) {
     let replaced = expr.replace(/\b\w+\b/g, word =>
         variables.hasOwnProperty(word) ? variables[word] : word
     );
+    return replaced;
 }
 
 async function interpretBlock(lines, startIndex) {
@@ -53,8 +59,17 @@ async function interpret(line, lines, currentIndex) {
         const content = line.slice(7, -2).trim();
         console.log(`Executing WRITE with content: ${content}`);
         if (content.startsWith('"') && content.endsWith('"')) {
-            log(content.slice(1, -1));
-            console.log(`WRITE complete: string "${content.slice(1, -1)}"`);
+            let text = content.slice(1, -1);
+            // Replace ${varName} with variable values
+            text = text.replace(/\$\{(\w+)\}/g, (match, varName) => {
+                if (variables.hasOwnProperty(varName)) {
+                    return variables[varName];
+                } else {
+                    return match; // Keep ${varName} if variable not found
+                }
+            });
+            log(text);
+            console.log(`WRITE complete: string "${text}"`);
         } else if (variables.hasOwnProperty(content)) {
             log(variables[content]);
             console.log(`WRITE complete: variable ${content} = ${variables[content]}`);
@@ -62,7 +77,7 @@ async function interpret(line, lines, currentIndex) {
             console.log(`WRITE failed: '${content}' not defined`);
             log(`Fehler: '${content}' nicht definiert`);
         }
-        await new Promise(resolve => requestAnimationFrame(resolve));
+        // Remove the animation frame delay that was blocking execution
     }
 
     else if (line.startsWith("incase ") && line.endsWith("{")) {
@@ -72,16 +87,18 @@ async function interpret(line, lines, currentIndex) {
             const result = eval(exprWithVars(condition));
             console.log(`INCASE evaluation: ${result}`);
             if (!result) {
-                while (currentIndex < lines.length && lines[currentIndex].trim() != "}") {
-                    currentIndex++;
+                // Search for closing } in the provided lines array (could be blockLines or full lines)
+                let skipIndex = currentIndex;
+                while (skipIndex < lines.length && lines[skipIndex].trim() != "}") {
+                    skipIndex++;
                 }
-                console.log(`INCASE skipped block`);
-                return currentIndex;
+                console.log(`INCASE skipped block from ${currentIndex} to ${skipIndex}`);
+                return skipIndex;
             }
             console.log(`INCASE entering block`);
             return "start_block";
-        } catch {
-            console.log(`INCASE failed to evaluate`);
+        } catch (e) {
+            console.log(`INCASE failed to evaluate: ${e.message}`);
             log("Fehler in incase");
             return "skip_block";
         }
@@ -90,13 +107,49 @@ async function interpret(line, lines, currentIndex) {
     else if (line.startsWith("input (") && line.endsWith(");")) {
         const varName = line.slice(7, -2).trim();
         console.log(`Executing INPUT for variable: ${varName}`);
-        const userInput = prompt(`Bitte Wert für '${varName}' eingeben:`);
-        if (userInput !== null) {
-            variables[varName] = userInput;
-            console.log(`INPUT complete: ${varName} = ${userInput}`);
+        
+        // Show input prompt in console
+        log(`Eingabe für '${varName}':`);
+        
+        // Show input container
+        const inputContainer = document.getElementById("InputContainer");
+        const inputField = document.getElementById("ConsoleInput");
+        const submitBtn = document.getElementById("SubmitInput");
+        
+        inputContainer.style.display = "flex";
+        inputField.value = "";
+        inputField.focus();
+        
+        // Wait for user input using Promise
+        const userInput = await new Promise((resolve) => {
+            const handleSubmit = () => {
+                const value = inputField.value;
+                inputContainer.style.display = "none";
+                submitBtn.removeEventListener("click", handleSubmit);
+                inputField.removeEventListener("keypress", handleKeyPress);
+                resolve(value);
+            };
+            
+            const handleKeyPress = (e) => {
+                if (e.key === "Enter") {
+                    handleSubmit();
+                }
+            };
+            
+            submitBtn.addEventListener("click", handleSubmit);
+            inputField.addEventListener("keypress", handleKeyPress);
+        });
+        
+        if (userInput !== null && userInput !== "") {
+            // Try to convert to number if it's a numeric string
+            const numValue = Number(userInput);
+            variables[varName] = isNaN(numValue) ? userInput : numValue;
+            log(`> ${userInput}`);
+            console.log(`INPUT complete: ${varName} = ${variables[varName]}`);
         } else {
             console.log(`INPUT cancelled by user`);
             log(`Eingabe für '${varName}' abgebrochen`);
+            return "user_cancelled";
         }
     }
     else if (line.startsWith("connect src:\"") && line.endsWith("\";")) {
@@ -141,9 +194,21 @@ async function interpret(line, lines, currentIndex) {
     }
 
     else if (line.startsWith("during (") && line.endsWith(") {")) {
-        const condition = line.slice(8, -3).trim();
-        console.log(`Starting DURING loop with condition: ${condition}`);
-        return ["during_block", condition];
+        const content = line.slice(8, -3).trim();
+        // Check for breakOnCancel parameter
+        let condition = content;
+        let breakOnCancel = false;
+        
+        if (content.includes(",")) {
+            const parts = content.split(",").map(p => p.trim());
+            condition = parts[0];
+            if (parts[1] === "breakOnCancel") {
+                breakOnCancel = true;
+            }
+        }
+        
+        console.log(`Starting DURING loop with condition: ${condition}, breakOnCancel: ${breakOnCancel}`);
+        return ["during_block", condition, breakOnCancel];
     }
 
     else if (line.startsWith("wait (") && line.endsWith(");")) {
@@ -211,7 +276,7 @@ async function RunCode() {
     functions = {};
 
     // use the highlighted editor as the input source
-    const editorText = getEditorText();
+    const editorText = document.getElementById("editor")?.value || document.getElementById("InputScript")?.value || "";
     const lines = editorText.split("\n");
     let i = 0;
     console.log (lines);
@@ -235,8 +300,20 @@ async function RunCode() {
             i++;
         } else if (Array.isArray(result) && result[0] === "during_block") {
             const condition = result[1];
+            const breakOnCancel = result[2] || false;
+            
+            // Find matching closing brace by counting nested braces
             let endIdx = i + 1;
-            while (endIdx < lines.length && lines[endIdx].trim() !== "}") endIdx++;
+            let braceCount = 1; // We already have the opening brace from "during (x) {"
+            while (endIdx < lines.length && braceCount > 0) {
+                const trimmed = lines[endIdx].trim();
+                if (trimmed.endsWith("{")) {
+                    braceCount++;
+                } else if (trimmed === "}") {
+                    braceCount--;
+                }
+                if (braceCount > 0) endIdx++;
+            }
             
             try {
                 console.log("=== DURING LOOP START ===");
@@ -246,16 +323,54 @@ async function RunCode() {
                     console.log(`--- Loop iteration | x = ${variables['x']} | condition: ${condition} ---`);
                     
                     // Execute block lines one by one, waiting for each to complete
+                    let userCancelled = false;
                     for (let j = 0; j < blockLines.length; j++) {
                         const line = blockLines[j].trim();
                         if (line === "") continue;
                         
+                        console.log(`    [DEBUG] Processing line ${j}/${blockLines.length}: "${line}"`);
+                        
                         // Wait for each line to fully complete before moving to next
-                        await interpret(line, blockLines, j);
+                        const result = await interpret(line, blockLines, j);
+                        
+                        // Check if user cancelled input
+                        if (result === "user_cancelled" && breakOnCancel) {
+                            console.log("=== DURING LOOP ABORTED - user cancelled input ===");
+                            userCancelled = true;
+                            break;
+                        }
+                        
+                        // Handle incase blocks within during loop
+                        if (result === "start_block") {
+                            j++; // move to first line inside incase block
+                            while (j < blockLines.length && blockLines[j].trim() !== "}") {
+                                const incaseResult = await interpret(blockLines[j].trim(), blockLines, j);
+                                if (incaseResult === "user_cancelled" && breakOnCancel) {
+                                    console.log("=== DURING LOOP ABORTED - user cancelled input ===");
+                                    userCancelled = true;
+                                    break;
+                                }
+                                j++;
+                            }
+                            if (userCancelled) break;
+                            console.log(`    [DEBUG] Incase block ended, j is now at ${j} (closing })`);
+                            // j is now at the closing }, loop will increment it
+                        } else if (typeof result === "number") {
+                            // incase returned a skip index from global lines array
+                            // We need to find the closing } in blockLines instead
+                            let closingBrace = j;
+                            while (closingBrace < blockLines.length && blockLines[closingBrace].trim() !== "}") {
+                                closingBrace++;
+                            }
+                            console.log(`    [DEBUG] Skipping from ${j} to ${closingBrace} (recalculated)`);
+                            j = closingBrace; // jump to closing brace in blockLines
+                        }
                         
                         // For debugging - show variable state after each line
                         console.log(`    After line "${line}": x = ${variables['x']}`);
                     }
+                    
+                    if (userCancelled) break;
                     
                     // Check condition with updated variables
                     if (!eval(exprWithVars(condition))) {

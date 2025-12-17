@@ -181,6 +181,45 @@ textarea {
     box-sizing: border-box;
 }
 
+/* Input Container für Console Input */
+.InputContainer {
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    background: #f0f0f0;
+    border-radius: 8px;
+    align-items: center;
+}
+
+.InputContainer input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1em;
+    font-family: inherit;
+}
+
+.InputContainer input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.InputContainer button {
+    padding: 8px 16px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background var(--transition);
+}
+
+.InputContainer button:hover {
+    background: #1d4ed8;
+}
+
 /* Rechte Spalte */
 .RightSide {
     width: 25%; /* feste Breite */
@@ -350,8 +389,8 @@ textarea {
     height: 500px ;
     font-size: 1.2em ;
     padding: 10px ;
-    border-radius: 10px ;
-    border: 1px solid #ccc ;
+    border-radius: 10px !important;
+    border: 1px solid #ccc !important;
     resize: vertical ;
     box-sizing: border-box ;
     z-index: 2;

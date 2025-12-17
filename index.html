@@ -8,6 +8,10 @@
     <link rel="stylesheet" href="CSS/CloseButton.css">
     <link rel="stylesheet" href="CSS/style.css">
     <link rel="stylesheet" href="CSS/Classes.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+
     <title>Coding-Environment</title>
 </head>
 
@@ -228,9 +232,13 @@
     </script>
     <div class="Container">
         <div class="LeftSide">
-                <textarea id="editor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"
-                    placeholder="Type code here..."></textarea>
+            <textarea id="editor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"
+                placeholder="Type code here..."></textarea>
             <textarea readonly id="Output" placeholder="Output:"></textarea>
+            <div class="InputContainer" id="InputContainer" style="display: none;">
+                <input type="text" id="ConsoleInput" placeholder="Eingabe hier...">
+                <button id="SubmitInput">OK</button>
+            </div>
         </div>
         <div class="RightSide">
             <h3 id="UserName" class="UserName" onclick="OpenLoginSite()">Login</h3>
@@ -267,9 +275,10 @@
             <h3>Login</h3> <input type="text" placeholder="Username" id="LoginInputName"> <input type="password"
                 placeholder="Passwort" id="LoginInputPassword"> <button onclick="togglePasswordLogin()"
                 id="TogglePasswordButtonLogin"> <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20"
-                    height="20" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    viewBox="0 0 24 24">
-                    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8 a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
+                    height="20" fill="none" stroke="black" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" viewBox="0 0 24 24">
+                    <path
+                        d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8 a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
                     <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
                     <line x1="3" y1="3" x2="21" y2="21" /> </svg> </button> <button id="LoginButton"
                 onclick="loginEntered()">Login</button>
@@ -278,15 +287,22 @@
             <h3>Register</h3> <input type="text" placeholder="Username" id="RegisterInputName"> <input type="password"
                 id="RegisterInputPassword" placeholder="Passwort"> <button onclick="togglePasswordRegister()"
                 id="TogglePasswordButtonRegister"> <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20"
-                    height="20" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    viewBox="0 0 24 24">
-                    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8 a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
+                    height="20" fill="none" stroke="black" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" viewBox="0 0 24 24">
+                    <path
+                        d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8 a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
                     <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
                     <line x1="3" y1="3" x2="21" y2="21" /> </svg> </button> <button id="RegisterButton"
                 onclick="registerEntered()">Register</button>
         </div>
         <h2 onclick="OpenLoginSite()" id="CloseButton">X</h2>
     </div>
+
+    <script>
+        CodeMirror.fromTextArea(document.getElementById("editor"), {
+            lineNumbers: true
+        });
+    </script>
 
     <link rel="stylesheet" href="CSS/highlighter.css">
 
@@ -355,4 +371,5 @@
     </script>
     <script src="JS/Jal.js"></script>
 </body>
+
 </html>

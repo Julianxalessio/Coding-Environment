@@ -2,13 +2,54 @@ let variables = {};
 let functions = {};
 let externalFiles = {}; // Speichert Inhalte zusätzlicher Dateien
 
+// Helper to work with CodeMirror if available
+function getCodeMirror() {
+    try {
+        // 'editor' is created in index.html via CodeMirror.fromTextArea
+        if (typeof editor !== "undefined" && editor && typeof editor.getValue === "function") return editor;
+    } catch (e) {
+        // ignore reference errors when 'editor' is not defined
+    }
+    return null;
+}
+
+function getEditorValue() {
+    const cm = getCodeMirror();
+    if (cm) return cm.getValue();
+    const el = document.getElementById("editor") || document.getElementById("InputScript");
+    return el ? el.value : "";
+}
+
+function setEditorValue(content) {
+    const cm = getCodeMirror();
+    if (cm) {
+        cm.setValue(content ?? "");
+        cm.focus();
+        // place cursor at end
+        const doc = cm.getDoc();
+        const lastLine = doc.lastLine();
+        doc.setCursor({ line: lastLine, ch: doc.getLine(lastLine).length });
+        return;
+    }
+    const el = document.getElementById("editor") || document.getElementById("InputScript");
+    if (el) {
+        el.value = content ?? "";
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.focus();
+    }
+}
+
 // Random function for use in expressions
 function Random(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 function log(msg) {
-    document.getElementById("Output").value += msg + "\n";
+    output = document.getElementById("Output");
+    output.value += msg + "\n";
+    requestAnimationFrame(() => {
+    output.scrollTop = output.scrollHeight;
+  });
 }
 
 function exprWithVars(expr) {
@@ -276,7 +317,7 @@ async function RunCode() {
     functions = {};
 
     // use the highlighted editor as the input source
-    const editorText = document.getElementById("editor")?.value || document.getElementById("InputScript")?.value || "";
+    const editorText = getEditorValue();
     const lines = editorText.split("\n");
     let i = 0;
     console.log (lines);
@@ -401,24 +442,26 @@ function loadExternalFile(filename, content) {
 // Add this function after loadExternalFile
 
 function insertCodeAtCursor(codeBlock) {
+    const cm = getCodeMirror();
+    if (cm) {
+        const doc = cm.getDoc();
+        doc.replaceSelection(codeBlock);
+        cm.focus();
+        return;
+    }
+    // Fallback to textarea
     const input = document.getElementById("editor") || document.getElementById("InputScript");
     if (!input) return;
-
     const startPos = typeof input.selectionStart === 'number' ? input.selectionStart : input.value.length;
     const endPos = typeof input.selectionEnd === 'number' ? input.selectionEnd : startPos;
     const beforeText = input.value.substring(0, startPos);
     const afterText = input.value.substring(endPos);
-
     input.value = beforeText + codeBlock + afterText;
-
-    // Place cursor after inserted code
     const newCursorPos = startPos + codeBlock.length;
     if (typeof input.setSelectionRange === 'function') {
         input.setSelectionRange(newCursorPos, newCursorPos);
     }
     input.focus();
-
-    // trigger highlighting update if editor uses an input listener
     input.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
@@ -489,11 +532,7 @@ function CreateFileFromFirebase(fileName, content) {
                 return;
             }
             // Fallback: lade Datei direkt in den Editor
-            const editorEl = document.getElementById("editor");
-            if (editorEl) {
-                editorEl.value = window.Files[fileName] || "";
-                editorEl.dispatchEvent(new Event('input'));
-            }
+            setEditorValue(window.Files[fileName] || "");
             // UI: aktiviere Datei
             document.querySelectorAll(".File").forEach(el => el.classList.remove("active"));
             fileDiv.classList.add("active");
@@ -522,11 +561,7 @@ function CreateFileFromFirebase(fileName, content) {
             if (fileDiv && fileDiv.parentElement) fileDiv.remove();
             if (window.ActiveFile === fileName) {
                 window.ActiveFile = undefined;
-                const editorEl = document.getElementById("editor") || document.getElementById("InputScript");
-                if (editorEl) {
-                    editorEl.value = "";
-                    editorEl.dispatchEvent(new Event('input'));
-                }
+                setEditorValue("");
             }
         });
 
@@ -586,11 +621,7 @@ function CreateFile() {
             window.LoadFileContent(this);
             return;
         }
-        const editorEl = document.getElementById("editor") || document.getElementById("InputScript");
-        if (editorEl) {
-            editorEl.value = window.Files[fileName] || "";
-            editorEl.dispatchEvent(new Event('input'));
-        }
+        setEditorValue(window.Files[fileName] || "");
         document.querySelectorAll(".File").forEach(el => el.classList.remove("active"));
         fileDiv.classList.add("active");
         window.ActiveFile = fileName;
@@ -618,8 +649,7 @@ function CreateFile() {
         if (fileDiv && fileDiv.parentElement) fileDiv.remove();
         if (window.ActiveFile === fileName) {
             window.ActiveFile = undefined;
-            const editorEl = document.getElementById("editor") || document.getElementById("InputScript");
-            if (editorEl) editorEl.value = "";
+            setEditorValue("");
         }
     });
 
@@ -632,11 +662,7 @@ function CreateFile() {
 
     // setze als aktive Datei und fülle Editor
     window.ActiveFile = fileName;
-    const editorEl = document.getElementById("editor") || document.getElementById("InputScript");
-    if (editorEl) {
-        editorEl.value = "";
-        editorEl.dispatchEvent(new Event('input'));
-    }
+    setEditorValue("");
 
     // clear input field
     nameInput.value = "";
@@ -647,15 +673,17 @@ window.CreateFile = CreateFile;
 function SaveFile() {
     window.Files = window.Files || {};
     const fileName = window.ActiveFile;
-    const editor = document.getElementById("editor") || document.getElementById("InputScript");
     if (!fileName) {
         alert("No file selected");
         return;
     }
-    const content = editor ? editor.value : "";
+    const content = getEditorValue();
     window.Files[fileName] = content;
 
     try {
+        // ensure underlying textarea mirrors CodeMirror content for module scripts
+        const cm = getCodeMirror();
+        if (cm && typeof cm.save === "function") cm.save();
         if (typeof window.SaveFileToFirebase === "function") {
             // SaveFileToFirebase expected to read editor/window state itself
             window.SaveFileToFirebase();

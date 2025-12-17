@@ -10,8 +10,7 @@
     <link rel="stylesheet" href="CSS/Classes.css">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
-
+    <link rel="stylesheet" href="CSS/codeMirror.css">
     <title>Coding-Environment</title>
 </head>
 
@@ -266,7 +265,10 @@
                     <button onclick="insertTemplate()">Insert</button>
                 </div>
                 <button onclick="SaveFile()" id="SaveBtn">Save</button>
-                <button id="RunButton">Run</button>
+                <div class="RunButtons">
+                    <button id="RunButton">Run</button>
+                    <button id="ToggleLookIn">Look Inside</button>
+                </div>
             </div>
         </div>
     </div>
@@ -299,9 +301,12 @@
     </div>
 
     <script>
-        CodeMirror.fromTextArea(document.getElementById("editor"), {
-            lineNumbers: true
-        });
+        const editor = CodeMirror.fromTextArea(
+            document.getElementById("editor"), {
+                lineNumbers: true,
+                mode: "text/plain"
+            }
+        );
     </script>
 
     <link rel="stylesheet" href="CSS/highlighter.css">

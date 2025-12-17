@@ -1,32 +1,35 @@
 /* -------------------------
    Farb- und Layout-Variablen
    ------------------------- */
-:root{
+:root {
     --bg: #f5f7fb;
     --card: #ffffff;
     --muted: #6b7280;
-    --accent: #2563eb; /* blau */
-    --accent-2: #06b6d4; /* türkis */
-    --border: rgba(0,0,0,0.08);
-    --glass: rgba(255,255,255,0.65);
-    --shadow-sm: 0 4px 10px rgba(16,24,40,0.06);
-    --shadow-md: 0 10px 30px rgba(16,24,40,0.08);
+    --accent: #2563eb;
+    /* blau */
+    --accent-2: #06b6d4;
+    /* türkis */
+    --border: rgba(0, 0, 0, 0.08);
+    --glass: rgba(255, 255, 255, 0.65);
+    --shadow-sm: 0 4px 10px rgba(16, 24, 40, 0.06);
+    --shadow-md: 0 10px 30px rgba(16, 24, 40, 0.08);
     --radius: 12px;
-    --transition: 180ms cubic-bezier(.2,.9,.2,1);
+    --transition: 180ms cubic-bezier(.2, .9, .2, 1);
     --max-width: 52rem;
     --container-gap: 1.25rem;
     font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
-                 Roboto, "Helvetica Neue", Arial;
+        Roboto, "Helvetica Neue", Arial;
 }
 
 /* Grundlayout / Body */
-html,body{
-    height:100%;
-    margin:0;
+html,
+body {
+    height: 100%;
+    margin: 0;
     background: linear-gradient(180deg, #f7fbff 0%, var(--bg) 100%);
     color: #111827;
-    -webkit-font-smoothing:antialiased;
-    -moz-osx-font-smoothing:grayscale;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 /* -------------------------
@@ -41,7 +44,7 @@ html,body{
     gap: 20px;
     padding: 2rem;
     z-index: 9999;
-    background: linear-gradient(0deg, rgba(2,6,23,0.28), rgba(2,6,23,0.18));
+    background: linear-gradient(0deg, rgba(2, 6, 23, 0.28), rgba(2, 6, 23, 0.18));
 }
 
 /* Card */
@@ -49,7 +52,7 @@ html,body{
 #RegisterContainer {
     width: min(var(--max-width), 94vw);
     max-width: 42rem;
-    background: linear-gradient(180deg, rgba(255,255,255,0.9), var(--card));
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), var(--card));
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     box-shadow: var(--shadow-md);
@@ -74,9 +77,9 @@ html,body{
 #LoginSite input,
 #LoginSite textarea,
 #LoginSite select {
-    -webkit-appearance:none;
+    -webkit-appearance: none;
     appearance: none;
-    border: 1px solid rgba(15,23,42,0.08);
+    border: 1px solid rgba(15, 23, 42, 0.08);
     background: #fff;
     padding: 0.6rem 0.75rem;
     border-radius: 10px;
@@ -93,7 +96,7 @@ html,body{
 #LoginSite textarea:focus,
 #LoginSite select:focus {
     border-color: var(--accent);
-    box-shadow: 0 6px 20px rgba(37,99,235,0.12);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.12);
     transform: translateY(-1px);
 }
 
@@ -116,7 +119,7 @@ button {
 #LoginSite button:hover,
 button:hover {
     transform: translateY(-3px);
-    box-shadow: 0 14px 30px rgba(6,182,212,0.12);
+    box-shadow: 0 14px 30px rgba(6, 182, 212, 0.12);
 }
 
 /* Close button */
@@ -135,7 +138,10 @@ button:hover {
     box-shadow: var(--shadow-sm);
     transition: transform var(--transition);
 }
-#CloseButton:hover { transform: translateY(-3px); }
+
+#CloseButton:hover {
+    transform: translateY(-3px);
+}
 
 /* -------------------------
    Index / Hauptlayout
@@ -153,16 +159,19 @@ textarea {
 /* Grundlayout: linke Seite (Inputs/Output) + rechte Spalte (Login + Files + Buttons) */
 .Container {
     display: flex;
-    flex-direction: row; /* nebeneinander: links Input/Output, rechts Sidebar */
+    flex-direction: row;
+    /* nebeneinander: links Input/Output, rechts Sidebar */
     height: 100vh;
-    gap: 20px; /* Abstand zwischen Hauptbereich und Sidebar */
+    gap: 20px;
+    /* Abstand zwischen Hauptbereich und Sidebar */
     padding: 10px;
     box-sizing: border-box;
 }
 
 /* Linke Seite: Input + Output untereinander */
 .LeftSide {
-    flex: 1 1 auto; /* nimmt so viel Platz wie möglich */
+    flex: 1 1 auto;
+    /* nimmt so viel Platz wie möglich */
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -170,9 +179,10 @@ textarea {
 
 /* Output darunter */
 #Output {
-    resize: none !important;  
+    resize: none !important;
     width: 100%;
-    flex: 1 1 auto; /* füllt den Rest */
+    flex: 1 1 auto;
+    /* füllt den Rest */
     font-size: 1.1em;
     padding: 10px;
     border-radius: 10px;
@@ -181,6 +191,14 @@ textarea {
     box-sizing: border-box;
 }
 
+.RunButtons{
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+.RunButtons button{
+    flex: 1;
+}
 /* Input Container für Console Input */
 .InputContainer {
     display: flex;
@@ -222,7 +240,8 @@ textarea {
 
 /* Rechte Spalte */
 .RightSide {
-    width: 25%; /* feste Breite */
+    width: 25%;
+    /* feste Breite */
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -230,7 +249,7 @@ textarea {
 
 /* Username/Login oben */
 .UserName {
-    
+
     border-radius: 10px;
     padding: 10px;
     border: solid 1px black;
@@ -239,6 +258,7 @@ textarea {
     cursor: pointer;
     background-color: white;
 }
+
 .UserName:hover {
     background-color: black;
     color: white;
@@ -246,7 +266,8 @@ textarea {
 
 /* Dateien-Bereich */
 .FilesContainer {
-    flex: 1 1 auto; /* wächst mit */
+    flex: 1 1 auto;
+    /* wächst mit */
     border-radius: 10px;
     border: solid 1px black;
     padding: 5px;
@@ -278,8 +299,13 @@ textarea {
 
 
 /* Responsive: bei kleinen Bildschirmen */
-@media (max-width: 980px){
-    .Container { grid-template-columns: 1fr; grid-auto-rows: min-content; height: auto; padding-bottom: 3rem; }
+@media (max-width: 980px) {
+    .Container {
+        grid-template-columns: 1fr;
+        grid-auto-rows: min-content;
+        height: auto;
+        padding-bottom: 3rem;
+    }
 }
 
 /* New file button */
@@ -289,40 +315,54 @@ textarea {
     font-size: 1rem;
     border-radius: 10px;
     margin: 0.25rem;
-    border: 1px solid rgba(0,0,0,0.06);
+    border: 1px solid rgba(0, 0, 0, 0.06);
     background: #fff;
     box-shadow: var(--shadow-sm);
     cursor: pointer;
     color: black;
     text-align: center;
 }
-.NewFileBtn:hover { background: #f1f5f9; transform: translateY(-2px); }
+
+.NewFileBtn:hover {
+    background: #f1f5f9;
+    transform: translateY(-2px);
+}
 
 /* New filename input */
-.NewFileNameInput { font-size: 1rem; padding: 0.45rem 0.6rem; border-radius: 8px; }
+.NewFileNameInput {
+    font-size: 1rem;
+    padding: 0.45rem 0.6rem;
+    border-radius: 8px;
+}
 
 /* File list item */
 .File {
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     padding: 0.55rem;
     gap: 0.5rem;
     margin: 0.5rem 0;
     border-radius: 10px;
-    background: linear-gradient(180deg,#fff,#fcfeff);
-    border: 1px solid rgba(0,0,0,0.04);
+    background: linear-gradient(180deg, #fff, #fcfeff);
+    border: 1px solid rgba(0, 0, 0, 0.04);
     transition: transform var(--transition), box-shadow var(--transition);
 }
 
-.FileName { font-size: 1rem; margin:0; color: #0b1220; }
+.FileName {
+    font-size: 1rem;
+    margin: 0;
+    color: #0b1220;
+}
 
 .File.active {
-    background: #5f86dc;   /* Blau */
+    background: #5f86dc;
+    /* Blau */
     color: #fff;
     border-color: #1e40af;
-    box-shadow: 0 0 6px rgba(37,99,235,0.5);
+    box-shadow: 0 0 6px rgba(37, 99, 235, 0.5);
 }
+
 /* Hitbox for file selection */
 .FileHitbox {
     width: 100%;
@@ -332,10 +372,16 @@ textarea {
 
 
 /* Utility */
-.center { display:flex; align-items:center; justify-content:center; }
-.small { font-size:0.9rem; color:var(--muted); }
+.center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-/* Add this to your existing CSS */
+.small {
+    font-size: 0.9rem;
+    color: var(--muted);
+}
 
 #codeTemplates {
     height: 40px;
@@ -378,24 +424,24 @@ textarea {
     min-width: 80px;
 }
 
-#editor {
-  font-family: monospace;
-  font-size: 14px;
-  line-height: 1.4;
-  white-space: pre-wrap;
-  word-break: break-word;
-  overflow: auto;
-  width: 100%;
-    height: 500px ;
-    font-size: 1.2em ;
-    padding: 10px ;
+.CodeMirror {
+    font-family: monospace;
+    font-size: 14px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow: auto;
+    width: 100%;
+    height: 60%;
+    font-size: 1.2em;
+    padding: 10px;
     border-radius: 10px !important;
     border: 1px solid #ccc !important;
-    resize: vertical ;
-    box-sizing: border-box ;
+    resize: vertical;
+    box-sizing: border-box;
     z-index: 2;
-  outline: none;
-  color: black;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    outline: none;
+    color: black;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }

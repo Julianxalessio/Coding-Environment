@@ -11,6 +11,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
     <link rel="stylesheet" href="CSS/codeMirror.css">
+    <link rel="stylesheet" href="CSS/lookInside.css">
     <title>Coding-Environment</title>
 </head>
 
@@ -267,7 +268,7 @@
                 <button onclick="SaveFile()" id="SaveBtn">Save</button>
                 <div class="RunButtons">
                     <button id="RunButton">Run</button>
-                    <button id="ToggleLookIn">Look Inside</button>
+                    <button id="ToggleLookIn" onclick="toggleInside()">Look Inside</button>
                 </div>
             </div>
         </div>
@@ -299,15 +300,111 @@
         </div>
         <h2 onclick="OpenLoginSite()" id="CloseButton">X</h2>
     </div>
-
+    <div class="LookIn">
+        <h3><u>Look Inside</u></h3>
+        <textarea readonly placeholder="Look Inside: ..." id="LookInContent"></textarea>
+    </div>
     <script>
+        const keywords = ["set", "reSet", "write", "input", "incase", "during", "wait", "Random"];
+
+        // Define the custom mode
+        CodeMirror.defineMode("customScript", function () {
+            return {
+                token: function (stream) {
+                    // 1️⃣ Kommentare
+                    if (stream.match("//")) {
+                        stream.skipToEnd();
+                        return "comment";
+                    }
+
+                    // 2️⃣ Strings in ""
+                    if (stream.match(/"([^"]*)"/) || stream.match(/\$\{[^}]+\}/)) {
+                        return "string";
+                    }
+
+                    // 3️⃣ Zahlen
+                    if (stream.match(/^\d+/)) {
+                        return "number";
+                    }
+
+                    // 4️⃣ Keywords
+                    for (let kw of keywords) {
+                        if (stream.match(kw)) return "keyword";
+                    }
+
+                    // 5️⃣ Variablen/Wörter
+                    if (stream.match(/\w+/)) return "variable-2";
+
+                    stream.next();
+                    return null;
+                }
+            };
+        });
+
+        // Create the editor with the custom mode
         const editor = CodeMirror.fromTextArea(
             document.getElementById("editor"), {
                 lineNumbers: true,
-                mode: "text/plain"
+                mode: "customScript",
+                theme: "default",
+                extraKeys: {
+                    "Ctrl-R": function (cm) {
+                        if (typeof window.RunCode === 'function') {
+                            window.RunCode();
+                        }
+                    },
+                    "Ctrl-S": function (cm) {
+                        if (typeof window.SaveFile === 'function') {
+                            window.SaveFile();
+                        }
+                    },
+                    "Ctrl-I": function (cm) {
+                        if (typeof window.insertTemplate === 'function') {
+                            window.insertTemplate();
+                        }
+                    },
+                    "Ctrl-L": function (cm) {
+                        if (typeof window.toggleInside === 'function') {
+                            window.toggleInside();
+                        } else if (typeof toggleInside === 'function') {
+                            toggleInside();
+                        }
+                    }
+                }
             }
         );
+
+        function toggleInside() {
+            const lookIn = document.querySelector(".LookIn");
+            lookIn.classList.toggle("Visible");
+        }
+        window.toggleInside = toggleInside;
     </script>
+    <style>
+        .cm-keyword {
+            color: #d73a49;
+            font-weight: bold;
+        }
+
+        .cm-number {
+            color: #005cc5;
+        }
+
+        .cm-string {
+            color: #863822;
+        }
+
+        .cm-comment {
+            color: #40802e;
+            font-style: italic;
+        }
+
+        .cm-variable-2 {
+            color: #6f42c1;
+            font-weight: bold;
+        }
+
+    </style>
 
     <link rel="stylesheet" href="CSS/highlighter.css">
 
@@ -375,6 +472,7 @@
         }
     </script>
     <script src="JS/Jal.js"></script>
+    <script src="JS/listener.js"></script>
 </body>
 
 </html>

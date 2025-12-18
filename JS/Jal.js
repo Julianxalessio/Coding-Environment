@@ -28,13 +28,18 @@ function setEditorValue(content) {
         // place cursor at end
         const doc = cm.getDoc();
         const lastLine = doc.lastLine();
-        doc.setCursor({ line: lastLine, ch: doc.getLine(lastLine).length });
+        doc.setCursor({
+            line: lastLine,
+            ch: doc.getLine(lastLine).length
+        });
         return;
     }
     const el = document.getElementById("editor") || document.getElementById("InputScript");
     if (el) {
         el.value = content ?? "";
-        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('input', {
+            bubbles: true
+        }));
         el.focus();
     }
 }
@@ -48,8 +53,20 @@ function log(msg) {
     output = document.getElementById("Output");
     output.value += msg + "\n";
     requestAnimationFrame(() => {
-    output.scrollTop = output.scrollHeight;
-  });
+        output.scrollTop = output.scrollHeight;
+    });
+}
+
+function insideLog(msg, lineNumber, error = false) {
+    const lookIn = document.getElementById("LookInContent");
+    if (lookIn) {
+        const line = (error ? `❌ Line ${lineNumber}: ${msg}` : `Line ${lineNumber}: ${msg}`) + "\n";
+        // Textareas render their visible text from the 'value' property, not textContent
+        lookIn.value += line;
+        requestAnimationFrame(() => {
+            lookIn.scrollTop = lookIn.scrollHeight;
+        });
+    }
 }
 
 function exprWithVars(expr) {
@@ -86,19 +103,17 @@ async function interpret(line, lines, currentIndex) {
     if (line.startsWith("set ")) {
         const parts = line.slice(4, -1).split(" = ");
         const varName = parts[0].trim();
-        console.log(`Executing SET: Setting ${varName} to ${parts[1].trim()}`);
+        insideLog(`Executing SET: Setting ${varName} to ${parts[1].trim()}`, currentIndex + 1);
         try {
             variables[varName] = eval(exprWithVars(parts[1].trim()));
-            console.log(`SET complete: ${varName} = ${variables[varName]}`);
+            insideLog(`SET complete: ${varName} = ${variables[varName]}`, currentIndex + 1);
         } catch {
-            console.log(`SET failed for ${varName}`);
+            insideLog(`SET failed for ${varName}`, currentIndex + 1, true);
             log("Fehler bei set");
         }
-    }
-
-    else if (line.startsWith("write (") && line.endsWith(");")) {
+    } else if (line.startsWith("write (") && line.endsWith(");")) {
         const content = line.slice(7, -2).trim();
-        console.log(`Executing WRITE with content: ${content}`);
+        insideLog(`Executing WRITE with content: ${content}`, currentIndex + 1);
         if (content.startsWith('"') && content.endsWith('"')) {
             let text = content.slice(1, -1);
             // Replace ${varName} with variable values
@@ -110,57 +125,53 @@ async function interpret(line, lines, currentIndex) {
                 }
             });
             log(text);
-            console.log(`WRITE complete: string "${text}"`);
+            insideLog(`WRITE complete: string "${text}"`, currentIndex + 1);
         } else if (variables.hasOwnProperty(content)) {
             log(variables[content]);
-            console.log(`WRITE complete: variable ${content} = ${variables[content]}`);
+            insideLog(`WRITE complete: variable ${content} = ${variables[content]}`, currentIndex + 1);
         } else {
-            console.log(`WRITE failed: '${content}' not defined`);
+            insideLog(`WRITE failed: '${content}' not defined`, currentIndex + 1, true);
             log(`Fehler: '${content}' nicht definiert`);
         }
         // Remove the animation frame delay that was blocking execution
-    }
-
-    else if (line.startsWith("incase ") && line.endsWith("{")) {
+    } else if (line.startsWith("incase ") && line.endsWith("{")) {
         const condition = line.slice(7, -1).trim();
-        console.log(`Executing INCASE with condition: ${condition}`);
+        insideLog(`Executing INCASE with condition: ${condition}`, currentIndex + 1);
         try {
             const result = eval(exprWithVars(condition));
-            console.log(`INCASE evaluation: ${result}`);
+            insideLog(`INCASE evaluation: ${result}`, currentIndex + 1);
             if (!result) {
                 // Search for closing } in the provided lines array (could be blockLines or full lines)
                 let skipIndex = currentIndex;
                 while (skipIndex < lines.length && lines[skipIndex].trim() != "}") {
                     skipIndex++;
                 }
-                console.log(`INCASE skipped block from ${currentIndex} to ${skipIndex}`);
+                insideLog(`INCASE skipped block from ${currentIndex} to ${skipIndex}`, currentIndex + 1);
                 return skipIndex;
             }
-            console.log(`INCASE entering block`);
+            insideLog(`INCASE entering block`, currentIndex + 1);
             return "start_block";
         } catch (e) {
-            console.log(`INCASE failed to evaluate: ${e.message}`);
+            insideLog(`INCASE failed to evaluate: ${e.message}`, currentIndex + 1, true);
             log("Fehler in incase");
             return "skip_block";
         }
-    }
-
-    else if (line.startsWith("input (") && line.endsWith(");")) {
+    } else if (line.startsWith("input (") && line.endsWith(");")) {
         const varName = line.slice(7, -2).trim();
-        console.log(`Executing INPUT for variable: ${varName}`);
-        
+        insideLog(`Executing INPUT for variable: ${varName}`, currentIndex + 1);
+
         // Show input prompt in console
         log(`Eingabe für '${varName}':`);
-        
+
         // Show input container
         const inputContainer = document.getElementById("InputContainer");
         const inputField = document.getElementById("ConsoleInput");
         const submitBtn = document.getElementById("SubmitInput");
-        
+
         inputContainer.style.display = "flex";
         inputField.value = "";
         inputField.focus();
-        
+
         // Wait for user input using Promise
         const userInput = await new Promise((resolve) => {
             const handleSubmit = () => {
@@ -170,76 +181,69 @@ async function interpret(line, lines, currentIndex) {
                 inputField.removeEventListener("keypress", handleKeyPress);
                 resolve(value);
             };
-            
+
             const handleKeyPress = (e) => {
                 if (e.key === "Enter") {
                     handleSubmit();
                 }
             };
-            
+
             submitBtn.addEventListener("click", handleSubmit);
             inputField.addEventListener("keypress", handleKeyPress);
         });
-        
+
         if (userInput !== null && userInput !== "") {
             // Try to convert to number if it's a numeric string
             const numValue = Number(userInput);
             variables[varName] = isNaN(numValue) ? userInput : numValue;
             log(`> ${userInput}`);
-            console.log(`INPUT complete: ${varName} = ${variables[varName]}`);
+            insideLog(`INPUT complete: ${varName} = ${variables[varName]}`, currentIndex + 1);
         } else {
-            console.log(`INPUT cancelled by user`);
+            insideLog(`INPUT cancelled by user`, currentIndex + 1, true);
             log(`Eingabe für '${varName}' abgebrochen`);
             return "user_cancelled";
         }
-    }
-    else if (line.startsWith("connect src:\"") && line.endsWith("\";")) {
+    } else if (line.startsWith("connect src:\"") && line.endsWith("\";")) {
         const filename = line.slice(13, -2).trim();
-        console.log(`Executing CONNECT to file: ${filename}`);
+        insideLog(`Executing CONNECT to file: ${filename}`, currentIndex + 1);
         if (externalFiles.hasOwnProperty(filename)) {
             const fileContent = externalFiles[filename];
             const fileLines = fileContent.split("\n");
-            console.log(`CONNECT: inserting ${fileLines.length} lines from ${filename}`);
+            insideLog(`CONNECT: inserting ${fileLines.length} lines from ${filename}`, currentIndex + 1);
             for (let j = 0; j < fileLines.length; j++) {
                 lines.splice(currentIndex + 1 + j, 0, fileLines[j]);
             }
-            console.log(`CONNECT complete: inserted lines from ${filename}`);
+            insideLog(`CONNECT complete: inserted lines from ${filename}`, currentIndex + 1);
             return "inserted";
         } else {
-            console.log(`CONNECT failed: file ${filename} not found`);
+            insideLog(`CONNECT failed: file ${filename} not found`, currentIndex + 1, true);
             log(`Fehler: Datei '${filename}' nicht gefunden`);
-        } 
-    }
-
-    else if (line.startsWith("func ")) {
+        }
+    } else if (line.startsWith("func ")) {
         let funcName = line.slice(5).trim();
         if (funcName.endsWith("{")) funcName = funcName.slice(0, -1).trim();
-        console.log(`Defining FUNCTION: ${funcName}`);
+        insideLog(`Defining FUNCTION: ${funcName}`, currentIndex + 1);
         functions[funcName] = [];
         return ["start_function", funcName];
-    }
-
-    else if (line.startsWith("call ") && line.endsWith(";")) {
+    } else if (line.startsWith("call ") && line.endsWith(";")) {
         const funcName = line.slice(5, -1).trim();
-        console.log(`Executing CALL to function: ${funcName}`);
+        insideLog(`Executing CALL to function: ${funcName}`, currentIndex + 1);
         if (functions.hasOwnProperty(funcName)) {
-            console.log(`CALL: executing ${functions[funcName].length} lines in ${funcName}`);
+            insideLog(`CALL: executing ${functions[funcName].length} lines in ${funcName}`, currentIndex + 1);
             for (const funcLine of functions[funcName]) {
                 await interpret(funcLine, lines, currentIndex);
             }
-            console.log(`CALL complete: ${funcName}`);
+            insideLog(`CALL complete: ${funcName}`, currentIndex + 1);
         } else {
-            console.log(`CALL failed: function ${funcName} not defined`);
+            insideLog(`CALL failed: function ${funcName} not defined`, currentIndex + 1, true);
             log(`Fehler: Funktion '${funcName}' nicht definiert`);
         }
-    }
-
-    else if (line.startsWith("during (") && line.endsWith(") {")) {
+    } else if (line.startsWith("during (") && line.endsWith(") {")) {
         const content = line.slice(8, -3).trim();
         // Check for breakOnCancel parameter
         let condition = content;
         let breakOnCancel = false;
-        
+
         if (content.includes(",")) {
             const parts = content.split(",").map(p => p.trim());
             condition = parts[0];
@@ -247,64 +251,57 @@ async function interpret(line, lines, currentIndex) {
                 breakOnCancel = true;
             }
         }
-        
-        console.log(`Starting DURING loop with condition: ${condition}, breakOnCancel: ${breakOnCancel}`);
-        return ["during_block", condition, breakOnCancel];
-    }
 
-    else if (line.startsWith("wait (") && line.endsWith(");")) {
+        insideLog(`Starting DURING loop with condition: ${condition}, breakOnCancel: ${breakOnCancel}`, currentIndex + 1);
+        return ["during_block", condition, breakOnCancel];
+    } else if (line.startsWith("wait (") && line.endsWith(");")) {
         const durationStr = line.slice(6, -2).trim();
-        console.log(`Executing WAIT for ${durationStr}`);
+        insideLog(`Executing WAIT for ${durationStr}`, currentIndex + 1);
         let duration = 0;
         try {
             duration = eval(exprWithVars(durationStr));
             if (typeof duration === 'number') {
-                console.log(`WAIT starting: ${duration}ms`);
+                insideLog(`WAIT starting: ${duration}ms`, currentIndex + 1);
                 await sleep(duration);
-                console.log(`WAIT complete after ${duration}ms`);
+                insideLog(`WAIT complete after ${duration}ms`, currentIndex + 1);
             } else {
-                console.log(`WAIT failed: Invalid duration type`);
+                insideLog(`WAIT failed: Invalid duration type`, currentIndex + 1, true);
                 log("Fehler bei wait: Ungültige Dauer");
             }
         } catch (e) {
-            console.log(`WAIT failed: ${e.message}`);
+            insideLog(`WAIT failed: ${e.message}`, currentIndex + 1, true);
             log("Fehler bei wait: " + e.message);
         }
-    }
-
-    else if (line.startsWith("reSet ")) {
+    } else if (line.startsWith("reSet ")) {
         const parts = line.slice(6, -1).split("=");
-        console.log(`Executing RESET on variable: ${parts[0].trim()}`);
+        insideLog(`Executing RESET on variable: ${parts[0].trim()}`, currentIndex + 1);
         if (parts.length !== 2) {
-            console.log(`RESET failed: Invalid format`);
+            insideLog(`RESET failed: Invalid format`, currentIndex + 1);
             log("Fehler: Ungültiges reSet Format");
             return;
         }
         const varName = parts[0].trim();
         const expression = parts[1].trim();
-        
+
         try {
             if (!variables.hasOwnProperty(varName)) {
-                console.log(`RESET failed: Variable ${varName} does not exist`);
+                insideLog(`RESET failed: Variable ${varName} does not exist`, currentIndex + 1);
                 log(`Fehler: Variable '${varName}' existiert nicht`);
                 return;
             }
             const oldValue = variables[varName];
             const newValue = eval(exprWithVars(expression));
             variables[varName] = newValue;
-            console.log(`RESET complete: ${varName} changed from ${oldValue} to ${newValue}`);
+            insideLog(`RESET complete: ${varName} changed from ${oldValue} to ${newValue}`, currentIndex + 1);
         } catch (e) {
-            console.log(`RESET failed: ${e.message}`);
+            insideLog(`RESET failed: ${e.message}`, currentIndex + 1, true);
             log("Fehler bei reSet: " + e.message);
         }
-    }
-    else if (line === "" || line.startsWith("//") || line.startsWith("}")) {
+    } else if (line === "" || line.startsWith("//") || line.startsWith("}")) {
         // Leere Zeilen oder Kommentare ignorieren
         return null;
-    }
-
-    else {
-        console.log(`ERROR: Unknown command: ${line}`);
+    } else {
+        insideLog(`ERROR: Unknown command: ${line}`, currentIndex + 1, true);
         log(`Unbekannter Befehl: '${line}'`);
         return null;
     }
@@ -313,6 +310,7 @@ async function interpret(line, lines, currentIndex) {
 // Make RunCode async as well
 async function RunCode() {
     document.getElementById("Output").value = "";
+    document.getElementById("LookInContent").value = "";
     variables = {};
     functions = {};
 
@@ -320,7 +318,7 @@ async function RunCode() {
     const editorText = getEditorValue();
     const lines = editorText.split("\n");
     let i = 0;
-    console.log (lines);
+    console.log(lines);
 
     while (i < lines.length) {
         const result = await interpret(lines[i], lines, i);
@@ -342,7 +340,7 @@ async function RunCode() {
         } else if (Array.isArray(result) && result[0] === "during_block") {
             const condition = result[1];
             const breakOnCancel = result[2] || false;
-            
+
             // Find matching closing brace by counting nested braces
             let endIdx = i + 1;
             let braceCount = 1; // We already have the opening brace from "during (x) {"
@@ -355,37 +353,39 @@ async function RunCode() {
                 }
                 if (braceCount > 0) endIdx++;
             }
-            
+
             try {
                 console.log("=== DURING LOOP START ===");
                 const blockLines = lines.slice(i + 1, endIdx);
-                
+                const blockStartLine = i + 1; // Store the starting line number of the block in the full file
+
                 while (eval(exprWithVars(condition))) {
                     console.log(`--- Loop iteration | x = ${variables['x']} | condition: ${condition} ---`);
-                    
+
                     // Execute block lines one by one, waiting for each to complete
                     let userCancelled = false;
                     for (let j = 0; j < blockLines.length; j++) {
                         const line = blockLines[j].trim();
                         if (line === "") continue;
-                        
-                        console.log(`    [DEBUG] Processing line ${j}/${blockLines.length}: "${line}"`);
-                        
+
+                        const actualLineNumber = blockStartLine + j; // Calculate actual line number in full file
+
                         // Wait for each line to fully complete before moving to next
-                        const result = await interpret(line, blockLines, j);
-                        
+                        const result = await interpret(line, blockLines, actualLineNumber);
+
                         // Check if user cancelled input
                         if (result === "user_cancelled" && breakOnCancel) {
                             console.log("=== DURING LOOP ABORTED - user cancelled input ===");
                             userCancelled = true;
                             break;
                         }
-                        
+
                         // Handle incase blocks within during loop
                         if (result === "start_block") {
                             j++; // move to first line inside incase block
                             while (j < blockLines.length && blockLines[j].trim() !== "}") {
-                                const incaseResult = await interpret(blockLines[j].trim(), blockLines, j);
+                                const incaseActualLineNumber = blockStartLine + j;
+                                const incaseResult = await interpret(blockLines[j].trim(), blockLines, incaseActualLineNumber);
                                 if (incaseResult === "user_cancelled" && breakOnCancel) {
                                     console.log("=== DURING LOOP ABORTED - user cancelled input ===");
                                     userCancelled = true;
@@ -394,7 +394,6 @@ async function RunCode() {
                                 j++;
                             }
                             if (userCancelled) break;
-                            console.log(`    [DEBUG] Incase block ended, j is now at ${j} (closing })`);
                             // j is now at the closing }, loop will increment it
                         } else if (typeof result === "number") {
                             // incase returned a skip index from global lines array
@@ -403,16 +402,12 @@ async function RunCode() {
                             while (closingBrace < blockLines.length && blockLines[closingBrace].trim() !== "}") {
                                 closingBrace++;
                             }
-                            console.log(`    [DEBUG] Skipping from ${j} to ${closingBrace} (recalculated)`);
                             j = closingBrace; // jump to closing brace in blockLines
                         }
-                        
-                        // For debugging - show variable state after each line
-                        console.log(`    After line "${line}": x = ${variables['x']}`);
                     }
-                    
+
                     if (userCancelled) break;
-                    
+
                     // Check condition with updated variables
                     if (!eval(exprWithVars(condition))) {
                         console.log("=== DURING LOOP END - condition false ===");
@@ -423,12 +418,12 @@ async function RunCode() {
                 console.error("During loop error:", e);
                 log("Fehler in during: " + e.message);
             }
-            
+
             i = endIdx + 1;
-        } if (typeof result === "number") {
+        }
+        if (typeof result === "number") {
             i = result + 1; // jump to line after the returned index
-        }   
-        else {
+        } else {
             i++;
         }
     }
@@ -462,7 +457,9 @@ function insertCodeAtCursor(codeBlock) {
         input.setSelectionRange(newCursorPos, newCursorPos);
     }
     input.focus();
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('input', {
+        bubbles: true
+    }));
 }
 
 // Make it available globally
@@ -557,7 +554,8 @@ function CreateFileFromFirebase(fileName, content) {
                 if (window.Files && window.Files[fileName] !== undefined) {
                     delete window.Files[fileName];
                 }
-            } catch (e) { /* ignore */ }
+            } catch (e) {
+                /* ignore */ }
             if (fileDiv && fileDiv.parentElement) fileDiv.remove();
             if (window.ActiveFile === fileName) {
                 window.ActiveFile = undefined;
@@ -645,7 +643,8 @@ function CreateFile() {
             if (window.Files && window.Files[fileName] !== undefined) {
                 delete window.Files[fileName];
             }
-        } catch (e) { /* ignore */ }
+        } catch (e) {
+            /* ignore */ }
         if (fileDiv && fileDiv.parentElement) fileDiv.remove();
         if (window.ActiveFile === fileName) {
             window.ActiveFile = undefined;

@@ -488,3 +488,26 @@ div.CodeMirror-dragcursors {
 span.CodeMirror-selectedtext {
     background: 0 0
 }
+
+.cm-keyword {
+    color: #d73a49;
+    font-weight: bold;
+}
+
+.cm-number {
+    color: #005cc5;
+}
+
+.cm-string {
+    color: #863822;
+}
+
+.cm-comment {
+    color: #40802e;
+    font-style: italic;
+}
+
+.cm-variable-2 {
+    color: #6f42c1;
+    font-weight: bold;
+}

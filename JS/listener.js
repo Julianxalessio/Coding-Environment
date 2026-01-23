@@ -27,6 +27,15 @@ window.addEventListener("keydown", function (e) {
 });
 
 window.addEventListener("beforeunload", e => {
+  try {
+    if (typeof window.logout === "function") {
+      window.logout();
+    } else {
+      window.LoginedUser = "";
+    }
+  } catch (err) {
+    console.error("Logout on unload failed", err);
+  }
   e.preventDefault();
   e.returnValue = "";
 });

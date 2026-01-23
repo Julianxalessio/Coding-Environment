@@ -29,6 +29,14 @@
             remove,
             onValue
         } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+        import {
+            getAuth,
+            onAuthStateChanged,
+            signInWithEmailAndPassword,
+            createUserWithEmailAndPassword,
+            signOut,
+            signInWithPopup
+        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyChvPU8blLsvMTUq5LO0dDewMiDzZhVx4M",
@@ -43,26 +51,28 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        const auth = getAuth(app);
 
         // ensure globals used by non-module scripts and inline handlers exist
         window.LoginedUser = window.LoginedUser || "";
         window.ActiveFile = window.ActiveFile || undefined;
         window.Files = window.Files || {};
 
-        window.creatUser = function (UserName, password) {
-            const dbRef = ref(db, `users/${UserName}`);
-            set(dbRef, {
-                Password: password
-            }).then(() => {
-                console.log("User created!");
-                window.LoginedUser = UserName;
-                document.getElementById("UserName").innerHTML = UserName;
-                OpenLoginSite();
-                const FilesContainer = document.getElementById("FilesContainer2");
-                FilesContainer.innerHTML = "";
-            }).catch((error) => {
-                console.error("Fehler beim Speichern:", error);
-            });
+        window.creatUser = function (email, password) {
+            createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    window.LoginedUser = user.uid;
+                    document.getElementById("UserName").innerHTML = user.email || user.uid;
+                    OpenLoginSite();
+                    const FilesContainer = document.getElementById("FilesContainer2");
+                    FilesContainer.innerHTML = "";
+                    LoadFiles();
+                })
+                .catch((error) => {
+                    alert(error.message);
+                    console.error("Auth register error:", error);
+                });
         };
 
         function SaveFile() {
@@ -146,30 +156,51 @@
             });
         }
 
-        window.login = function (InputUser, InputPassword) {
-            get(child(ref(db), `users/${InputUser}/Password`))
-                .then((snapshot) => {
-                    if (snapshot.exists()) {
-                        const password = snapshot.val();
-                        if (InputPassword == password) {
-                            window.LoginedUser = InputUser;
-                            document.getElementById("UserName").innerHTML = InputUser;
-                            const FilesContainer = document.getElementById("FilesContainer2");
-                            FilesContainer.innerHTML = "";
-                            OpenLoginSite();
-                            LoadFiles();
-
-                        } else {
-                            alert("Wrong Password");
-                        }
-                    } else {
-                        alert("Benutzer nicht gefunden");
-                    }
+        window.login = function (email, password) {
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    window.LoginedUser = user.uid;
+                    document.getElementById("UserName").innerHTML = user.email || user.uid;
+                    const FilesContainer = document.getElementById("FilesContainer2");
+                    FilesContainer.innerHTML = "";
+                    OpenLoginSite();
+                    LoadFiles();
                 })
                 .catch((error) => {
-                    console.error("Fehler beim Abrufen:", error);
+                    alert(error.message);
+                    console.error("Auth login error:", error);
                 });
         };
+
+        window.logout = function () {
+            signOut(auth).then(() => {
+                window.LoginedUser = "";
+                document.getElementById("UserName").innerHTML = "Login";
+                const FilesContainer = document.getElementById("FilesContainer2");
+                FilesContainer.innerHTML = "";
+                document.getElementById("editor").value = "";
+                document.getElementById("LookInContent").value = "";
+                document.getElementById("Output").value = "";
+            }).catch((error) => {
+                console.error("Logout error:", error);
+            });
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.LoginedUser = user.uid;
+                document.getElementById("UserName").innerHTML = user.email || user.uid;
+                const FilesContainer = document.getElementById("FilesContainer2");
+                FilesContainer.innerHTML = "";
+                LoadFiles();
+            } else {
+                window.LoginedUser = "";
+                document.getElementById("UserName").innerHTML = "Login";
+                const FilesContainer = document.getElementById("FilesContainer2");
+                FilesContainer.innerHTML = "";
+            }
+        });
 
         window.RemoveFile = function (FileName) {
             const UserName = window.LoginedUser;
@@ -275,28 +306,32 @@
     </div>
     <div id="LoginSite" class="None">
         <div id="LoginContainer">
-            <h3>Login</h3> <input type="text" placeholder="Username" id="LoginInputName"> <input type="password"
-                placeholder="Passwort" id="LoginInputPassword"> <button onclick="togglePasswordLogin()"
-                id="TogglePasswordButtonLogin"> <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20"
-                    height="20" fill="none" stroke="black" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round" viewBox="0 0 24 24">
-                    <path
-                        d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8 a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
+            <h3>Login</h3>
+            <input type="email" placeholder="Email" id="LoginInputName">
+            <input type="password" placeholder="Passwort" id="LoginInputPassword">
+            <button onclick="togglePasswordLogin()" id="TogglePasswordButtonLogin">
+                <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8 a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
                     <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-                    <line x1="3" y1="3" x2="21" y2="21" /> </svg> </button> <button id="LoginButton"
-                onclick="loginEntered()">Login</button>
+                    <line x1="3" y1="3" x2="21" y2="21" />
+                </svg>
+            </button>
+            <button id="LoginButton" onclick="loginEntered()">Login</button>
+            <button id="LogoutButton" onclick="logout()">Logout</button>
         </div>
         <div id="RegisterContainer">
-            <h3>Register</h3> <input type="text" placeholder="Username" id="RegisterInputName"> <input type="password"
-                id="RegisterInputPassword" placeholder="Passwort"> <button onclick="togglePasswordRegister()"
-                id="TogglePasswordButtonRegister"> <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20"
-                    height="20" fill="none" stroke="black" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round" viewBox="0 0 24 24">
-                    <path
-                        d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8 a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
+            <h3>Register</h3>
+            <input type="email" placeholder="Email" id="RegisterInputName">
+            <input type="password" id="RegisterInputPassword" placeholder="Passwort">
+            <button onclick="togglePasswordRegister()" id="TogglePasswordButtonRegister">
+                <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8 a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
                     <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-                    <line x1="3" y1="3" x2="21" y2="21" /> </svg> </button> <button id="RegisterButton"
-                onclick="registerEntered()">Register</button>
+                    <line x1="3" y1="3" x2="21" y2="21" />
+                </svg>
+            </button>
+            <button id="RegisterButton" onclick="registerEntered()">Register</button>
+            <button id="LogoutButton" onclick="logout()">Logout</button>
         </div>
         <h2 onclick="OpenLoginSite()" id="CloseButton">X</h2>
     </div>

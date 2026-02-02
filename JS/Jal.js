@@ -59,9 +59,7 @@ function log(msg) {
 
 function isVariable(line) {
     for (const varName in variables) {
-        if (line === varName) {
-            return true;
-        }
+        if (line === varName) return true;
     };
     return false;
 }
@@ -84,10 +82,7 @@ function exprWithVars(expr) {
         // Don't replace keywords or reserved words
         const reserved = ['true', 'false', 'null', 'undefined', 'and', 'or', 'not'];
         if (reserved.includes(word)) return word;
-        if (variables.hasOwnProperty(word)) {
-            // Properly format the value for JavaScript evaluation
-            return JSON.stringify(variables[word]);
-        }
+        if (variables.hasOwnProperty(word))return JSON.stringify(variables[word]);
         return word;
     });
     return replaced;
@@ -134,11 +129,8 @@ async function interpret(line, lines, currentIndex) {
             let text = content.slice(1, -1);
             // Replace ${varName} with variable values
             text = text.replace(/\$\{(\w+)\}/g, (match, varName) => {
-                if (variables.hasOwnProperty(varName)) {
-                    return variables[varName];
-                } else {
-                    return match; // Keep ${varName} if variable not found
-                }
+                if (variables.hasOwnProperty(varName)) return variables[varName]; 
+                else return match; // Keep ${varName} if variable not found
             });
             log(text);
             insideLog(`WRITE complete: string "${text}"`, currentIndex + 1);
@@ -150,7 +142,8 @@ async function interpret(line, lines, currentIndex) {
             log(`Fehler: '${content}' nicht definiert`);
         }
         // Remove the animation frame delay that was blocking execution
-    } else if (line.startsWith("incase ") && line.endsWith("{")) {
+    } 
+    else if (line.startsWith("incase ") && line.endsWith("{")) {
         const condition = line.slice(7, -1).trim();
         insideLog(`Executing INCASE with condition: ${condition}`, currentIndex + 1);
         try {
@@ -159,9 +152,7 @@ async function interpret(line, lines, currentIndex) {
             if (!result) {
                 // Search for closing } in the provided lines array (could be blockLines or full lines)
                 let skipIndex = currentIndex;
-                while (skipIndex < lines.length && lines[skipIndex].trim() != "}") {
-                    skipIndex++;
-                }
+                while (skipIndex < lines.length && lines[skipIndex].trim() != "}") skipIndex++;
                 insideLog(`INCASE skipped block from ${currentIndex} to ${skipIndex}`, currentIndex + 1);
                 return skipIndex;
             }
@@ -172,7 +163,8 @@ async function interpret(line, lines, currentIndex) {
             log("Fehler in incase");
             return "skip_block";
         }
-    } else if (line.startsWith("input (") && line.endsWith(");")) {
+    } 
+    else if (line.startsWith("input (") && line.endsWith(");")) {
         const varName = line.slice(7, -2).trim();
         insideLog(`Executing INPUT for variable: ${varName}`, currentIndex + 1);
 
@@ -199,9 +191,7 @@ async function interpret(line, lines, currentIndex) {
             };
 
             const handleKeyPress = (e) => {
-                if (e.key === "Enter") {
-                    handleSubmit();
-                }
+                if (e.key === "Enter") handleSubmit();
             };
 
             submitBtn.addEventListener("click", handleSubmit);
@@ -219,42 +209,42 @@ async function interpret(line, lines, currentIndex) {
             log(`Eingabe für '${varName}' abgebrochen`);
             return "user_cancelled";
         }
-    } else if (line.startsWith("connect src:\"") && line.endsWith("\";")) {
+    } 
+    else if (line.startsWith("connect src:\"") && line.endsWith("\";")) {
         const filename = line.slice(13, -2).trim();
         insideLog(`Executing CONNECT to file: ${filename}`, currentIndex + 1);
         if (externalFiles.hasOwnProperty(filename)) {
             const fileContent = externalFiles[filename];
             const fileLines = fileContent.split("\n");
             insideLog(`CONNECT: inserting ${fileLines.length} lines from ${filename}`, currentIndex + 1);
-            for (let j = 0; j < fileLines.length; j++) {
-                lines.splice(currentIndex + 1 + j, 0, fileLines[j]);
-            }
+            for (let j = 0; j < fileLines.length; j++) lines.splice(currentIndex + 1 + j, 0, fileLines[j]);
             insideLog(`CONNECT complete: inserted lines from ${filename}`, currentIndex + 1);
             return "inserted";
         } else {
             insideLog(`CONNECT failed: file ${filename} not found`, currentIndex + 1, true);
             log(`Fehler: Datei '${filename}' nicht gefunden`);
         }
-    } else if (line.startsWith("func ")) {
+    } 
+    else if (line.startsWith("func ")) {
         let funcName = line.slice(5).trim();
         if (funcName.endsWith("{")) funcName = funcName.slice(0, -1).trim();
         insideLog(`Defining FUNCTION: ${funcName}`, currentIndex + 1);
         functions[funcName] = [];
         return ["start_function", funcName];
-    } else if (line.startsWith("call ") && line.endsWith(";")) {
+    } 
+    else if (line.startsWith("call ") && line.endsWith(";")) {
         const funcName = line.slice(5, -1).trim();
         insideLog(`Executing CALL to function: ${funcName}`, currentIndex + 1);
         if (functions.hasOwnProperty(funcName)) {
             insideLog(`CALL: executing ${functions[funcName].length} lines in ${funcName}`, currentIndex + 1);
-            for (const funcLine of functions[funcName]) {
-                await interpret(funcLine, lines, currentIndex);
-            }
+            for (const funcLine of functions[funcName]) await interpret(funcLine, lines, currentIndex);
             insideLog(`CALL complete: ${funcName}`, currentIndex + 1);
         } else {
             insideLog(`CALL failed: function ${funcName} not defined`, currentIndex + 1, true);
             log(`Fehler: Funktion '${funcName}' nicht definiert`);
         }
-    } else if (line.startsWith("during (") && line.endsWith(") {")) {
+    } 
+    else if (line.startsWith("during (") && line.endsWith(") {")) {
         const content = line.slice(8, -3).trim();
         // Check for breakOnCancel parameter
         let condition = content;
@@ -263,14 +253,13 @@ async function interpret(line, lines, currentIndex) {
         if (content.includes(",")) {
             const parts = content.split(",").map(p => p.trim());
             condition = parts[0];
-            if (parts[1] === "breakOnCancel") {
-                breakOnCancel = true;
-            }
+            if (parts[1] === "breakOnCancel") breakOnCancel = true;
         }
 
         insideLog(`Starting DURING loop with condition: ${condition}, breakOnCancel: ${breakOnCancel}`, currentIndex + 1);
         return ["during_block", condition, breakOnCancel];
-    } else if (line.startsWith("wait (") && line.endsWith(");")) {
+    } 
+    else if (line.startsWith("wait (") && line.endsWith(");")) {
         const durationStr = line.slice(6, -2).trim();
         insideLog(`Executing WAIT for ${durationStr}`, currentIndex + 1);
         let duration = 0;
@@ -288,10 +277,9 @@ async function interpret(line, lines, currentIndex) {
             insideLog(`WAIT failed: ${e.message}`, currentIndex + 1, true);
             log("Fehler bei wait: " + e.message);
         }
-    } else if (line === "" || line.startsWith("//") || line.startsWith("}")) {
-        // Leere Zeilen oder Kommentare ignorieren
-        return null;
-    } else if (isVariable(line.split("=")[0].trim()) && line.includes("=")) {
+    } 
+    else if (line === "" || line.startsWith("//") || line.startsWith("}")) return null;
+    else if (isVariable(line.split("=")[0].trim()) && line.includes("=")) {
         const parts = line.split("=");
         if (parts.length !== 2) {
             insideLog(`Assignment failed: Invalid format`, currentIndex + 1, true);
@@ -329,14 +317,12 @@ async function RunCode() {
     const editorText = getEditorValue();
     const lines = editorText.split("\n");
     let i = 0;
-    console.log(lines);
 
     while (i < lines.length) {
         const result = await interpret(lines[i], lines, i);
 
-        if (result === "inserted") {
-            i++; // keep this to avoid infinite loops when inserting blocks
-        } else if (result === "start_block") {
+        if (result === "inserted") i++; // keep this to avoid infinite loops when inserting blocks
+        else if (result === "start_block") {
             i++;
             i = await interpretBlock(lines, i); // await here
             i++;
@@ -357,11 +343,7 @@ async function RunCode() {
             let braceCount = 1; // We already have the opening brace from "during (x) {"
             while (endIdx < lines.length && braceCount > 0) {
                 const trimmed = lines[endIdx].trim();
-                if (trimmed.endsWith("{")) {
-                    braceCount++;
-                } else if (trimmed === "}") {
-                    braceCount--;
-                }
+                if (trimmed.endsWith("{"))braceCount++; else if (trimmed === "}") braceCount--;
                 if (braceCount > 0) endIdx++;
             }
 
@@ -371,8 +353,6 @@ async function RunCode() {
                 const blockStartLine = i + 1; // Store the starting line number of the block in the full file
 
                 while (eval(exprWithVars(condition))) {
-                    console.log(`--- Loop iteration | x = ${variables['x']} | condition: ${condition} ---`);
-
                     // Execute block lines one by one, waiting for each to complete
                     let userCancelled = false;
                     for (let j = 0; j < blockLines.length; j++) {
@@ -386,7 +366,6 @@ async function RunCode() {
 
                         // Check if user cancelled input
                         if (result === "user_cancelled" && breakOnCancel) {
-                            console.log("=== DURING LOOP ABORTED - user cancelled input ===");
                             userCancelled = true;
                             break;
                         }
@@ -398,7 +377,6 @@ async function RunCode() {
                                 const incaseActualLineNumber = blockStartLine + j;
                                 const incaseResult = await interpret(blockLines[j].trim(), blockLines, incaseActualLineNumber);
                                 if (incaseResult === "user_cancelled" && breakOnCancel) {
-                                    console.log("=== DURING LOOP ABORTED - user cancelled input ===");
                                     userCancelled = true;
                                     break;
                                 }
@@ -410,33 +388,20 @@ async function RunCode() {
                             // incase returned a skip index from global lines array
                             // We need to find the closing } in blockLines instead
                             let closingBrace = j;
-                            while (closingBrace < blockLines.length && blockLines[closingBrace].trim() !== "}") {
-                                closingBrace++;
-                            }
+                            while (closingBrace < blockLines.length && blockLines[closingBrace].trim() !== "}")closingBrace++;
                             j = closingBrace; // jump to closing brace in blockLines
                         }
                     }
-
                     if (userCancelled) break;
 
                     // Check condition with updated variables
-                    if (!eval(exprWithVars(condition))) {
-                        console.log("=== DURING LOOP END - condition false ===");
-                        break;
-                    }
+                    if (!eval(exprWithVars(condition)))break;
                 }
-            } catch (e) {
-                console.error("During loop error:", e);
-                log("Fehler in during: " + e.message);
-            }
-
+            } catch (e) {log("Fehler in during: " + e.message);}
             i = endIdx + 1;
         }
-        if (typeof result === "number") {
-            i = result + 1; // jump to line after the returned index
-        } else {
-            i++;
-        }
+        // jump to line after the returned index
+        if (typeof result === "number") i = result + 1; else i++;
     }
 }
 
@@ -444,8 +409,6 @@ async function RunCode() {
 function loadExternalFile(filename, content) {
     externalFiles[filename] = content;
 }
-
-// Add this function after loadExternalFile
 
 function insertCodeAtCursor(codeBlock) {
     const cm = getCodeMirror();
@@ -473,15 +436,6 @@ function insertCodeAtCursor(codeBlock) {
     }));
 }
 
-// Make it available globally
-window.insertCodeAtCursor = insertCodeAtCursor;
-
-// ensure RunCode is reachable from inline onclick and hook button safely
-window.RunCode = RunCode;
-document.getElementById("RunButton")?.addEventListener("click", RunCode);
-
-// Update the codeTemplates object
-
 const codeTemplates = {
     if: "incase (condition) {\n    \n}\n",
     during: "during (x < 10) {\n    \n}\n",
@@ -496,18 +450,11 @@ const codeTemplates = {
     random: "set variable = Random(min, max);\n"
 };
 
-// No need for insertSelected function anymore since we're passing the template directly
-window.codeTemplates = codeTemplates; // Make templates available globally
-
 function insertTemplate() {
     const select = document.getElementById("codeTemplates");
     const template = codeTemplates[select.value];
-    if (template) {
-        insertCodeAtCursor(template);
-    }
+    if (template) insertCodeAtCursor(template);
 }
-
-window.insertTemplate = insertTemplate;
 
 function CreateFileFromFirebase(fileName, content) {
     window.Files = window.Files || {};
@@ -561,16 +508,10 @@ function CreateFileFromFirebase(fileName, content) {
 
             // unabhängig vom Ergebnis: UI und lokale Daten sofort aufräumen
             try {
-                if (window.Files && window.Files[fileName] !== undefined) {
-                    delete window.Files[fileName];
-                }
-            } catch (e) {
-                /* ignore */ }
+                if (window.Files && window.Files[fileName] !== undefined) delete window.Files[fileName];
+            } catch (e) {}
             if (fileDiv && fileDiv.parentElement) fileDiv.remove();
-            if (window.ActiveFile === fileName) {
-                window.ActiveFile = undefined;
-                setEditorValue("");
-            }
+            if (window.ActiveFile === fileName) {window.ActiveFile = undefined; setEditorValue("");}
         });
 
         btnsDiv.appendChild(openBtn);
@@ -582,24 +523,16 @@ function CreateFileFromFirebase(fileName, content) {
     }
 }
 
-window.CreateFileFromFirebase = CreateFileFromFirebase;
-
 function CreateFile() {
     window.Files = window.Files || {};
+
     const nameInput = document.getElementById("FileNameInput");
-    if (!nameInput) {
-        alert("Kein Dateiname-Eingabefeld gefunden");
-        return;
-    }
+    if (!nameInput) {alert("Kein Dateiname-Eingabefeld gefunden"); return;}
+
     const fileName = nameInput.value.trim();
-    if (!fileName) {
-        alert("Bitte einen Dateinamen eingeben");
-        return;
-    }
-    if (window.Files[fileName] !== undefined) {
-        alert("Datei existiert bereits");
-        return;
-    }
+    if (!fileName) {alert("Bitte einen Dateinamen eingeben"); return;}
+
+    if (window.Files[fileName] !== undefined) { alert("Datei existiert bereits"); return;}
 
     // lege Datei lokal an
     window.Files[fileName] = ""; // leerer Inhalt
@@ -650,11 +583,10 @@ function CreateFile() {
 
         // unabhängig vom Ergebnis: UI und lokale Daten sofort aufräumen
         try {
-            if (window.Files && window.Files[fileName] !== undefined) {
-                delete window.Files[fileName];
-            }
+            if (window.Files && window.Files[fileName] !== undefined) delete window.Files[fileName];
         } catch (e) {
-            /* ignore */ }
+            console.error("Error deleting file from window.Files:", e);
+        }
         if (fileDiv && fileDiv.parentElement) fileDiv.remove();
         if (window.ActiveFile === fileName) {
             window.ActiveFile = undefined;
@@ -677,32 +609,28 @@ function CreateFile() {
     nameInput.value = "";
 }
 
-window.CreateFile = CreateFile;
-
 function SaveFile() {
     window.Files = window.Files || {};
     const fileName = window.ActiveFile;
-    if (!fileName) {
-        alert("No file selected");
-        return;
-    }
+    if (!fileName) {alert("No file selected"); return;}
     const content = getEditorValue();
     window.Files[fileName] = content;
 
     try {
-        // ensure underlying textarea mirrors CodeMirror content for module scripts
         const cm = getCodeMirror();
         if (cm && typeof cm.save === "function") cm.save();
-        if (typeof window.SaveFileToFirebase === "function") {
-            // SaveFileToFirebase expected to read editor/window state itself
-            window.SaveFileToFirebase();
-        }
-    } catch (e) {
-        console.error("SaveFileToFirebase error:", e);
-    }
+        if (typeof window.SaveFileToFirebase === "function") window.SaveFileToFirebase();
+    } catch (e){console.error("SaveFileToFirebase error:", e);}
 
     // keep compatibility for other scripts
     window.ActiveFile = fileName;
     alert("File saved.");
 }
+
 window.SaveFile = SaveFile;
+window.CreateFile = CreateFile;
+window.CreateFileFromFirebase = CreateFileFromFirebase;
+window.insertCodeAtCursor = insertCodeAtCursor;
+window.RunCode = RunCode;
+window.insertTemplate = insertTemplate;
+window.codeTemplates = codeTemplates;

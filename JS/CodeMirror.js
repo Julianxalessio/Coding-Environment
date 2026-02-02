@@ -35,37 +35,40 @@ CodeMirror.defineMode("customScript", function () {
 });
 
 // Create the editor with the custom mode
-const editor = CodeMirror.fromTextArea(
-    document.getElementById("editor"), {
-        lineNumbers: true,
-        mode: "customScript",
-        theme: "default",
-        extraKeys: {
-            "Ctrl-R": function (cm) {
-                if (typeof window.RunCode === 'function') {
-                    window.RunCode();
-                }
-            },
-            "Ctrl-S": function (cm) {
-                if (typeof window.SaveFile === 'function') {
-                    window.SaveFile();
-                }
-            },
-            "Ctrl-I": function (cm) {
-                if (typeof window.insertTemplate === 'function') {
-                    window.insertTemplate();
-                }
-            },
-            "Ctrl-L": function (cm) {
-                if (typeof window.toggleInside === 'function') {
-                    window.toggleInside();
-                } else if (typeof toggleInside === 'function') {
-                    toggleInside();
+let editor;
+
+function initializeCodeMirror() {
+    editor = CodeMirror.fromTextArea(
+        document.getElementById("editor"), {
+            lineNumbers: true,
+            mode: "customScript",
+            theme: "default",
+            extraKeys: {
+                "Ctrl-R": function (cm) {
+                    if (typeof window.RunCode === 'function') {
+                        window.RunCode();
+                    }
+                },
+                    "Ctrl-S": function (cm) {
+                    if (typeof window.SaveFile === 'function') {
+                        window.SaveFile();
+                    }
+                },
+                "Ctrl-I": function (cm) {
+                    if (typeof window.insertTemplate === 'function') {
+                        window.insertTemplate();
+                    }
+                },
+                "Ctrl-L": function (cm) {
+                    if (typeof window.toggleInside === 'function') {
+                        window.toggleInside();
+                    } else if (typeof toggleInside === 'function') {
+                        toggleInside();
+                    }
                 }
             }
-        }
-    }
-);
+        });
+}
 
 function toggleInside() {
     const lookIn = document.querySelector(".LookIn");

@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,7 +14,6 @@
 
     <title>Coding-Environment</title>
 </head>
-
 <body>
     <div class="Container">
         <div class="LeftSide">
@@ -27,38 +25,9 @@
                 <button id="SubmitInput">OK</button>
             </div>
         </div>
-        <div class="RightSide">
-            <h3 id="UserName" class="UserName" onclick="OpenLoginSite()">Login</h3>
-            <div class="FilesContainer">
-                <button class="NewFileBtn" onclick="CreateFile()">Create</button>
-                <input id="FileNameInput" class="NewFileNameInput" type="text" placeholder="Name:">
-                <div id="FilesContainer2"></div>
-            </div>
-            <div class="Buttons">
-                <div class="template-insert">
-                    <select name="codeTemplates" id="codeTemplates">
-                        <option value="if">If Block (incase)</option>
-                        <option value="during">During Loop</option>
-                        <option value="func">Function Definition</option>
-                        <option value="set">Set Variable</option>
-                        <option value="write">Write Output</option>
-                        <option value="call">Call Function</option>
-                        <option value="reset">Redefine Variable</option>
-                        <option value="connect">Connect File</option>
-                        <option value="comment">Add Comment</option>
-                        <option value="wait">Wait/Pause</option>
-                        <option value="input">Input Variable</option>
-                        <option value="random">Random Number</option>
-                    </select>
-                    <button onclick="insertTemplate()">Insert</button>
-                </div>
-                <button onclick="SaveFile()" id="SaveBtn">Save</button>
-                <div class="RunButtons">
-                    <button id="RunButton">Run</button>
-                    <button id="ToggleLookIn" onclick="toggleInside()">Look Inside</button>
-                </div>
-            </div>
-        </div>
+        <div class="RightSide"></div>
+        
+        
     </div>
     <div id="LoginSite" class="None">
         <div id="LoginContainer">
@@ -66,8 +35,10 @@
             <input type="email" placeholder="Email" id="LoginInputName">
             <input type="password" placeholder="Passwort" id="LoginInputPassword">
             <button onclick="togglePasswordLogin()" id="TogglePasswordButtonLogin">
-                <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8 a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
+                <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+                    stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                    <path
+                        d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8 a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
                     <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
                     <line x1="3" y1="3" x2="21" y2="21" />
                 </svg>
@@ -80,8 +51,10 @@
             <input type="email" placeholder="Email" id="RegisterInputName">
             <input type="password" id="RegisterInputPassword" placeholder="Passwort">
             <button onclick="togglePasswordRegister()" id="TogglePasswordButtonRegister">
-                <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8 a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
+                <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+                    stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                    <path
+                        d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8 a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
                     <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
                     <line x1="3" y1="3" x2="21" y2="21" />
                 </svg>
@@ -95,12 +68,12 @@
         <h3><u>Look Inside</u></h3>
         <textarea readonly placeholder="Look Inside: ..." id="LookInContent"></textarea>
     </div>
-    
+    <script src="JS/LoadHTML.js"></script>
+
     <script src="JS/CodeMirror.js"></script>
     <script src="JS/LoginRegister.js"></script>
     <script src="JS/Jal.js"></script>
     <script src="JS/listener.js"></script>
     <script src="JS/Firebase.js" type="module"></script>
 </body>
-
 </html>

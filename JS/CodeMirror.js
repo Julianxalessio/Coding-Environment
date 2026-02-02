@@ -1,4 +1,4 @@
-const keywords = ["set", "reSet", "write", "input", "incase", "during", "wait", "Random"];
+const keywords = ["set", "write", "input", "incase", "during", "wait", "Random"];
 
 // Define the custom mode
 CodeMirror.defineMode("customScript", function () {

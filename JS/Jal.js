@@ -57,6 +57,15 @@ function log(msg) {
     });
 }
 
+function isVariable(line) {
+    for (const varName in variables) {
+        if (line === varName) {
+            return true;
+        }
+    };
+    return false;
+}
+
 function insideLog(msg, lineNumber, error = false) {
     const lookIn = document.getElementById("LookInContent");
     if (lookIn) {
@@ -70,10 +79,17 @@ function insideLog(msg, lineNumber, error = false) {
 }
 
 function exprWithVars(expr) {
-    // Variablen ersetzen
-    let replaced = expr.replace(/\b\w+\b/g, word =>
-        variables.hasOwnProperty(word) ? variables[word] : word
-    );
+    // Variablen ersetzen - only replace actual variable names, not operators
+    let replaced = expr.replace(/\b[a-zA-Z_]\w*\b/g, word => {
+        // Don't replace keywords or reserved words
+        const reserved = ['true', 'false', 'null', 'undefined', 'and', 'or', 'not'];
+        if (reserved.includes(word)) return word;
+        if (variables.hasOwnProperty(word)) {
+            // Properly format the value for JavaScript evaluation
+            return JSON.stringify(variables[word]);
+        }
+        return word;
+    });
     return replaced;
 }
 
@@ -272,35 +288,30 @@ async function interpret(line, lines, currentIndex) {
             insideLog(`WAIT failed: ${e.message}`, currentIndex + 1, true);
             log("Fehler bei wait: " + e.message);
         }
-    } else if (line.startsWith("reSet ")) {
-        const parts = line.slice(6, -1).split("=");
-        insideLog(`Executing RESET on variable: ${parts[0].trim()}`, currentIndex + 1);
+    } else if (line === "" || line.startsWith("//") || line.startsWith("}")) {
+        // Leere Zeilen oder Kommentare ignorieren
+        return null;
+    } else if (isVariable(line.split("=")[0].trim()) && line.includes("=")) {
+        const parts = line.split("=");
         if (parts.length !== 2) {
-            insideLog(`RESET failed: Invalid format`, currentIndex + 1);
-            log("Fehler: Ungültiges reSet Format");
+            insideLog(`Assignment failed: Invalid format`, currentIndex + 1, true);
+            log("Fehler: Ungültiges Zuweisungsformat");
             return;
         }
         const varName = parts[0].trim();
         const expression = parts[1].trim();
 
+        insideLog(`Executing assignment: ${varName} = ${expression}`, currentIndex + 1);
         try {
-            if (!variables.hasOwnProperty(varName)) {
-                insideLog(`RESET failed: Variable ${varName} does not exist`, currentIndex + 1);
-                log(`Fehler: Variable '${varName}' existiert nicht`);
-                return;
-            }
-            const oldValue = variables[varName];
             const newValue = eval(exprWithVars(expression));
             variables[varName] = newValue;
-            insideLog(`RESET complete: ${varName} changed from ${oldValue} to ${newValue}`, currentIndex + 1);
+            insideLog(`Assignment complete: ${varName} = ${newValue}`, currentIndex + 1);
         } catch (e) {
-            insideLog(`RESET failed: ${e.message}`, currentIndex + 1, true);
-            log("Fehler bei reSet: " + e.message);
+            insideLog(`Assignment failed: ${e.message}`, currentIndex + 1, true);
+            log("Fehler bei Zuweisung: " + e.message);
         }
-    } else if (line === "" || line.startsWith("//") || line.startsWith("}")) {
-        // Leere Zeilen oder Kommentare ignorieren
-        return null;
-    } else {
+    }
+    else {
         insideLog(`ERROR: Unknown command: ${line}`, currentIndex + 1, true);
         log(`Unbekannter Befehl: '${line}'`);
         return null;
@@ -325,6 +336,10 @@ async function RunCode() {
 
         if (result === "inserted") {
             i++; // keep this to avoid infinite loops when inserting blocks
+        } else if (result === "start_block") {
+            i++;
+            i = await interpretBlock(lines, i); // await here
+            i++;
         } else if (Array.isArray(result) && result[0] === "start_function") {
             const funcName = result[1];
             i++;
@@ -332,10 +347,6 @@ async function RunCode() {
                 functions[funcName].push(lines[i].trim());
                 i++;
             }
-            i++;
-        } else if (result === "start_block") {
-            i++;
-            i = await interpretBlock(lines, i); // await here
             i++;
         } else if (Array.isArray(result) && result[0] === "during_block") {
             const condition = result[1];
@@ -478,7 +489,6 @@ const codeTemplates = {
     set: "set variable = value;\n",
     write: "write (value);\n",
     call: "call functionName;\n",
-    reset: "reSet variable = newValue;\n",
     connect: "connect src:\"filename\";\n",
     comment: "// This is a comment\n",
     wait: "wait (1000);\n",

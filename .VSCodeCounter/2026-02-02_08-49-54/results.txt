@@ -1,0 +1,45 @@
+Date : 2026-02-02 08:49:54
+Directory : c:\Users\julia\Desktop\Coding\Coding-Environment
+Total : 15 files,  1737 codes, 96 comments, 261 blanks, all 2094 lines
+
+Languages
++------------+------------+------------+------------+------------+------------+
+| language   | files      | code       | comment    | blank      | total      |
++------------+------------+------------+------------+------------+------------+
+| JavaScript |          6 |        895 |         55 |        107 |      1,057 |
+| PostCSS    |          6 |        739 |         41 |        149 |        929 |
+| HTML       |          3 |        103 |          0 |          5 |        108 |
++------------+------------+------------+------------+------------+------------+
+
+Directories
++----------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                 | files      | code       | comment    | blank      | total      |
++----------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                    |         15 |      1,737 |         96 |        261 |      2,094 |
+| . (Files)                                                            |          1 |         67 |          0 |          5 |         72 |
+| CSS                                                                  |          6 |        739 |         41 |        149 |        929 |
+| HTML                                                                 |          2 |         36 |          0 |          0 |         36 |
+| JS                                                                   |          6 |        895 |         55 |        107 |      1,057 |
++----------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++----------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| filename                                                             | language   | code       | comment    | blank      | total      |
++----------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| c:\Users\julia\Desktop\Coding\Coding-Environment\CSS\Classes.css     | PostCSS    |          3 |          0 |          0 |          3 |
+| c:\Users\julia\Desktop\Coding\Coding-Environment\CSS\CloseButton.css | PostCSS    |         19 |          0 |          2 |         21 |
+| c:\Users\julia\Desktop\Coding\Coding-Environment\CSS\codeMirror.css  | PostCSS    |        274 |          0 |         96 |        370 |
+| c:\Users\julia\Desktop\Coding\Coding-Environment\CSS\highlighter.css | PostCSS    |         54 |          2 |          4 |         60 |
+| c:\Users\julia\Desktop\Coding\Coding-Environment\CSS\lookInside.css  | PostCSS    |         28 |          0 |          0 |         28 |
+| c:\Users\julia\Desktop\Coding\Coding-Environment\CSS\style.css       | PostCSS    |        361 |         39 |         47 |        447 |
+| c:\Users\julia\Desktop\Coding\Coding-Environment\HTML\LeftSide.html  | HTML       |          7 |          0 |          0 |          7 |
+| c:\Users\julia\Desktop\Coding\Coding-Environment\HTML\RightSide.html | HTML       |         29 |          0 |          0 |         29 |
+| c:\Users\julia\Desktop\Coding\Coding-Environment\JS\CodeMirror.js    | JavaScript |         46 |          7 |          9 |         62 |
+| c:\Users\julia\Desktop\Coding\Coding-Environment\JS\Firebase.js      | JavaScript |        219 |          1 |         17 |        237 |
+| c:\Users\julia\Desktop\Coding\Coding-Environment\JS\Jal.js           | JavaScript |        521 |         47 |         68 |        636 |
+| c:\Users\julia\Desktop\Coding\Coding-Environment\JS\LoadHTML.js      | JavaScript |         20 |          0 |          0 |         20 |
+| c:\Users\julia\Desktop\Coding\Coding-Environment\JS\LoginRegister.js | JavaScript |         53 |          0 |          8 |         61 |
+| c:\Users\julia\Desktop\Coding\Coding-Environment\JS\listener.js      | JavaScript |         36 |          0 |          5 |         41 |
+| c:\Users\julia\Desktop\Coding\Coding-Environment\index.html          | HTML       |         67 |          0 |          5 |         72 |
+| Total                                                                |            |      1,737 |         96 |        261 |      2,094 |
++----------------------------------------------------------------------+------------+------------+------------+------------+------------+

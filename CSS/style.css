@@ -139,9 +139,7 @@ button:hover {
     transition: transform var(--transition);
 }
 
-#CloseButton:hover {
-    transform: translateY(-3px);
-}
+#CloseButton:hover {transform: translateY(-3px);}
 
 /* -------------------------
    Index / Hauptlayout
@@ -196,9 +194,7 @@ textarea {
     gap: 10px;
     width: 100%;
 }
-.RunButtons button{
-    flex: 1;
-}
+.RunButtons button{flex: 1;}
 /* Input Container für Console Input */
 .InputContainer {
     display: flex;
@@ -234,9 +230,7 @@ textarea {
     transition: background var(--transition);
 }
 
-.InputContainer button:hover {
-    background: #1d4ed8;
-}
+.InputContainer button:hover {background: #1d4ed8;}
 
 /* Rechte Spalte */
 .RightSide {
@@ -249,7 +243,6 @@ textarea {
 
 /* Username/Login oben */
 .UserName {
-
     border-radius: 10px;
     padding: 10px;
     border: solid 1px black;
@@ -370,7 +363,6 @@ textarea {
     border-radius: 8px;
 }
 
-
 /* Utility */
 .center {
     display: flex;
@@ -416,13 +408,9 @@ textarea {
     gap: 8px;
 }
 
-.template-insert select {
-    flex: 1;
-}
+.template-insert select {flex: 1;}
 
-.template-insert button {
-    min-width: 80px;
-}
+.template-insert button {min-width: 80px;}
 
 .CodeMirror {
     font-family: monospace;

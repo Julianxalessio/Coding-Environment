@@ -11,9 +11,6 @@
     width: 47vw;
     z-index: 500;
 }
-.Visible {
-    display: block !important;
-}
 #LookInContent {
     width: 100%;
     height: 300px;

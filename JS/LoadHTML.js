@@ -15,7 +15,5 @@ async function getLeftSide() {
     `;
 }
 Promise.all([getLeftSide(), getRightSide()]).then(() => {
-    if (typeof initializeCodeMirror === 'function') {
-        initializeCodeMirror();
-    }
+    if (typeof initializeCodeMirror === 'function') initializeCodeMirror();
 });

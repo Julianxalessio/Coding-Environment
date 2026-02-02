@@ -60,9 +60,8 @@ function SaveFile() {
     const UserName = window.LoginedUser;
     const FileName = window.ActiveFile;
     const FileContent = document.getElementById("editor").value; // <- use editor
-    if (FileName == undefined) {
-        alert("No file selected");
-    } else {
+    if (FileName == undefined) alert("No file selected");
+    else {
         window.Files[FileName] = FileContent;
         SaveFileToFirebase()
         alert("Sucessfuly saved");
@@ -83,9 +82,8 @@ window.SaveFileToFirebase = function () {
     const FileContent = document.getElementById("editor").value; // <- use editor
     const dbRef = ref(db, `users/${UserName}/Files/${FileName}`);
 
-    if (UserName == "" || FileName == "") {
-        alert("Error")
-    } else {
+    if (UserName == "" || FileName == "") alert("Error");
+    else {
         set(dbRef, {
             Content: FileContent
         }).then(() => {
@@ -106,9 +104,8 @@ window.CreateFileOnFirebase = function (FileName) {
     const FileContent = document.getElementById("editor").value; // <- use editor
     const dbRef = ref(db, `users/${UserName}/Files/${FileName}`);
 
-    if (UserName == "" || FileName == "") {
-        alert("Error")
-    } else {
+    if (UserName == "" || FileName == "") alert("Error");
+    else {
         set(dbRef, {
             Content: FileContent
         }).then(() => {
@@ -131,9 +128,8 @@ window.LoadFiles = function () {
                 const file = data[fileName];
                 CreateFileFromFirebase(fileName, file.Content);
             });
-        } else {
-            console.log("Keine Dateien gefunden.");
-        }
+        } 
+        else console.log("Keine Dateien gefunden.");
     });
 }
 
@@ -203,9 +199,8 @@ function LoadFileContent(Parent) {
             let ContentOfInput = document.getElementById("editor").value; // <- use editor
             if (ContentOfActiveFile != ContentOfInput) {
                 let Antwort = confirm("Do you want to continue without saving?");
-                if (Antwort == false) {
-                    return
-                } else {
+                if (Antwort == false) return;
+                else {
                     let Content = window.Files[FileName];
                     const editorEl = document.getElementById("editor");
                     editorEl.value = Content; // set editor value

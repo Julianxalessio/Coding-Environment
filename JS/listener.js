@@ -18,36 +18,24 @@ window.addEventListener("keydown", function (e) {
     if (typeof window.insertTemplate === 'function') window.insertTemplate();
   } else if (key === 'l') {
     e.preventDefault();
-    if (typeof window.toggleInside === 'function') {
-      window.toggleInside();
-    } else if (typeof toggleInside === 'function') {
-      toggleInside();
-    }
+    if (typeof window.toggleInside === 'function') window.toggleInside();
+    else if (typeof toggleInside === 'function') toggleInside();
   }
 });
 
 window.addEventListener("beforeunload", e => {
   try {
-    if (typeof window.logout === "function") {
-      window.logout();
-    } else {
-      window.LoginedUser = "";
-    }
-  } catch (err) {
-    console.error("Logout on unload failed", err);
-  }
+    if (typeof window.logout === "function") window.logout();
+    else window.LoginedUser = "";
+  } catch (err) {console.error("Logout on unload failed", err);}
   e.preventDefault();
   e.returnValue = "";
 });
 
 document.getElementById("LoginContainer").addEventListener("keypress", function (e) {
-  if (e.key === "Enter") {
-    loginEntered();
-  }
+  if (e.key === "Enter") loginEntered();
 });
 
 document.getElementById("RegisterContainer").addEventListener("keypress", function (e) {
-  if (e.key === "Enter") {
-    registerEntered();
-  }
+  if (e.key === "Enter") registerEntered();
 });

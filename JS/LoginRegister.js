@@ -19,41 +19,38 @@ const eyeOffSVG = `
             `;
 
 function togglePasswordRegister() {
-    const input = document.getElementById("RegisterInputPassword");
-    const button = document.getElementById("TogglePasswordButtonRegister");
-
-    if (input.type === "password") {
-        input.type = "text";
-        button.innerHTML = eyeSVG;
-    } else {
-        input.type = "password";
-        button.innerHTML = eyeOffSVG;
-    }
+    togglePasswordVisibility("RegisterInputPassword", "TogglePasswordButtonRegister");
 }
 
 function togglePasswordLogin() {
-    const input = document.getElementById("LoginInputPassword");
-    const button = document.getElementById("TogglePasswordButtonLogin");
+    togglePasswordVisibility("LoginInputPassword", "TogglePasswordButtonLogin");
+}
 
-    if (input.type === "password") {
-        input.type = "text";
-        button.innerHTML = eyeSVG;
-    } else {
-        input.type = "password";
-        button.innerHTML = eyeOffSVG;
-    }
+function togglePasswordVisibility(inputId, buttonId) {
+    const input = document.getElementById(inputId);
+    const button = document.getElementById(buttonId);
+    if (!input || !button) return;
+
+    const isPassword = input.type === "password";
+    input.type = isPassword ? "text" : "password";
+    button.innerHTML = isPassword ? eyeSVG : eyeOffSVG;
 }
 
 function loginEntered() {
-    UserName = document.getElementById("LoginInputName").value;
-    Password = document.getElementById("LoginInputPassword").value;
-    login(UserName, Password);
+    submitAuth("LoginInputName", "LoginInputPassword", "login");
 }
 
 function registerEntered() {
-    UserName = document.getElementById("RegisterInputName").value;
-    Password = document.getElementById("RegisterInputPassword").value;
-    creatUser(UserName, Password);
+    submitAuth("RegisterInputName", "RegisterInputPassword", "creatUser");
+}
+
+function submitAuth(emailId, passwordId, actionName) {
+    const email = document.getElementById(emailId)?.value?.trim() || "";
+    const password = document.getElementById(passwordId)?.value || "";
+    const action = window[actionName];
+
+    if (typeof action !== "function") return;
+    action(email, password);
 }
 
 function OpenLoginSite() {

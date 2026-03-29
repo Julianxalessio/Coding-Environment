@@ -1,19 +1,17 @@
-async function getRightSide() {
-    const response = await fetch("HTML/RightSide.html");
+async function loadPartial(selector, path) {
+    const target = document.querySelector(selector);
+    if (!target) return;
+
+    const response = await fetch(path);
     if (!response.ok) return;
-    const data = await response.text();
-    document.querySelector(".RightSide").innerHTML = `
-        ${data}
-    `;
+
+    target.innerHTML = await response.text();
 }
-async function getLeftSide() {
-    const response = await fetch("HTML/LeftSide.html");
-    if (!response.ok) return;
-    const data = await response.text();
-    document.querySelector(".LeftSide").innerHTML = `
-        ${data}
-    `;
-}
-Promise.all([getLeftSide(), getRightSide()]).then(() => {
-    if (typeof initializeCodeMirror === 'function') initializeCodeMirror();
+
+Promise.all([
+    loadPartial(".LeftSide", "HTML/LeftSide.html"),
+    loadPartial(".RightSide", "HTML/RightSide.html")
+]).then(() => {
+    if (typeof initializeCodeMirror === "function") initializeCodeMirror();
+    document.dispatchEvent(new CustomEvent("layout-loaded"));
 });

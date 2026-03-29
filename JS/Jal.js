@@ -1,6 +1,7 @@
 let variables = {};
 let functions = {};
 let externalFiles = {}; // Speichert Inhalte zusätzlicher Dateien
+const RESERVED_WORDS = new Set(["true", "false", "null", "undefined", "and", "or", "not"]);
 
 // Helper to work with CodeMirror if available
 function getCodeMirror() {
@@ -50,7 +51,8 @@ function Random(min, max) {
 }
 
 function log(msg) {
-    output = document.getElementById("Output");
+    const output = document.getElementById("Output");
+    if (!output) return;
     output.value += msg + "\n";
     requestAnimationFrame(() => {
         output.scrollTop = output.scrollHeight;
@@ -58,10 +60,7 @@ function log(msg) {
 }
 
 function isVariable(line) {
-    for (const varName in variables) {
-        if (line === varName) return true;
-    };
-    return false;
+    return Object.prototype.hasOwnProperty.call(variables, line);
 }
 
 function insideLog(msg, lineNumber, error = false) {
@@ -77,15 +76,11 @@ function insideLog(msg, lineNumber, error = false) {
 }
 
 function exprWithVars(expr) {
-    // Variablen ersetzen - only replace actual variable names, not operators
-    let replaced = expr.replace(/\b[a-zA-Z_]\w*\b/g, word => {
-        // Don't replace keywords or reserved words
-        const reserved = ['true', 'false', 'null', 'undefined', 'and', 'or', 'not'];
-        if (reserved.includes(word)) return word;
-        if (variables.hasOwnProperty(word))return JSON.stringify(variables[word]);
+    return expr.replace(/\b[a-zA-Z_]\w*\b/g, word => {
+        if (RESERVED_WORDS.has(word)) return word;
+        if (Object.prototype.hasOwnProperty.call(variables, word)) return JSON.stringify(variables[word]);
         return word;
     });
-    return replaced;
 }
 
 async function interpretBlock(lines, startIndex) {
@@ -452,97 +447,14 @@ const codeTemplates = {
 
 function insertTemplate() {
     const select = document.getElementById("codeTemplates");
+    if (!select) return;
     const template = codeTemplates[select.value];
     if (template) insertCodeAtCursor(template);
 }
 
-function CreateFileFromFirebase(fileName, content) {
-    window.Files = window.Files || {};
-    // speichere/aktualisiere Inhalt
-    window.Files[fileName] = content;
-
-    // falls DOM-Eintrag noch nicht existiert, erstelle ihn
-    if (!document.getElementById(fileName)) {
-        const container = document.getElementById("FilesContainer2");
-        if (!container) return;
-
-        const fileDiv = document.createElement("div");
-        fileDiv.className = "File";
-        fileDiv.id = fileName;
-
-        const nameSpan = document.createElement("span");
-        nameSpan.className = "FileNameText";
-        nameSpan.textContent = fileName;
-
-        const btnsDiv = document.createElement("div");
-        btnsDiv.className = "FileBtns";
-
-        const openBtn = document.createElement("button");
-        openBtn.textContent = "Open";
-        openBtn.addEventListener("click", function () {
-            // bevorzugt global verfügbare LoadFileContent verwenden
-            if (typeof window.LoadFileContent === "function") {
-                window.LoadFileContent(this);
-                return;
-            }
-            // Fallback: lade Datei direkt in den Editor
-            setEditorValue(window.Files[fileName] || "");
-            // UI: aktiviere Datei
-            document.querySelectorAll(".File").forEach(el => el.classList.remove("active"));
-            fileDiv.classList.add("active");
-            window.ActiveFile = fileName;
-        });
-
-        const delBtn = document.createElement("button");
-        delBtn.textContent = "Delete";
-        delBtn.addEventListener("click", function () {
-            // versucht die serverseitige Löschung (falls vorhanden)
-            try {
-                if (typeof window.RemoveFile === "function") {
-                    // call but don't rely on a returned promise (module RemoveFile may not return one)
-                    window.RemoveFile(fileName);
-                }
-            } catch (e) {
-                console.error("RemoveFile call failed:", e);
-            }
-
-            // unabhängig vom Ergebnis: UI und lokale Daten sofort aufräumen
-            try {
-                if (window.Files && window.Files[fileName] !== undefined) delete window.Files[fileName];
-            } catch (e) {}
-            if (fileDiv && fileDiv.parentElement) fileDiv.remove();
-            if (window.ActiveFile === fileName) {window.ActiveFile = undefined; setEditorValue("");}
-        });
-
-        btnsDiv.appendChild(openBtn);
-        btnsDiv.appendChild(delBtn);
-
-        fileDiv.appendChild(nameSpan);
-        fileDiv.appendChild(btnsDiv);
-        container.appendChild(fileDiv);
-    }
-}
-
-function CreateFile() {
-    window.Files = window.Files || {};
-
-    const nameInput = document.getElementById("FileNameInput");
-    if (!nameInput) {alert("Kein Dateiname-Eingabefeld gefunden"); return;}
-
-    const fileName = nameInput.value.trim();
-    if (!fileName) {alert("Bitte einen Dateinamen eingeben"); return;}
-
-    if (window.Files[fileName] !== undefined) { alert("Datei existiert bereits"); return;}
-
-    // lege Datei lokal an
-    window.Files[fileName] = ""; // leerer Inhalt
-
-    // DOM-Eintrag erstellen (gleiches Layout wie CreateFileFromFirebase)
+function createFileCard(fileName) {
     const container = document.getElementById("FilesContainer2") || document.getElementById("FilesContainer");
-    if (!container) {
-        console.warn("Files container not found");
-        return;
-    }
+    if (!container) return null;
 
     const fileDiv = document.createElement("div");
     fileDiv.className = "File";
@@ -556,38 +468,33 @@ function CreateFile() {
     btnsDiv.className = "FileBtns";
 
     const openBtn = document.createElement("button");
+    openBtn.type = "button";
     openBtn.textContent = "Open";
     openBtn.addEventListener("click", function () {
         if (typeof window.LoadFileContent === "function") {
             window.LoadFileContent(this);
             return;
         }
-        setEditorValue(window.Files[fileName] || "");
+        setEditorValue((window.Files && window.Files[fileName]) || "");
         document.querySelectorAll(".File").forEach(el => el.classList.remove("active"));
         fileDiv.classList.add("active");
         window.ActiveFile = fileName;
     });
 
     const delBtn = document.createElement("button");
+    delBtn.type = "button";
     delBtn.textContent = "Delete";
     delBtn.addEventListener("click", function () {
-        // versucht die serverseitige Löschung (falls vorhanden)
         try {
-            if (typeof window.RemoveFile === "function") {
-                // call but don't rely on a returned promise (module RemoveFile may not return one)
-                window.RemoveFile(fileName);
-            }
+            if (typeof window.RemoveFile === "function") window.RemoveFile(fileName);
         } catch (e) {
             console.error("RemoveFile call failed:", e);
         }
 
-        // unabhängig vom Ergebnis: UI und lokale Daten sofort aufräumen
-        try {
-            if (window.Files && window.Files[fileName] !== undefined) delete window.Files[fileName];
-        } catch (e) {
-            console.error("Error deleting file from window.Files:", e);
+        if (window.Files && Object.prototype.hasOwnProperty.call(window.Files, fileName)) {
+            delete window.Files[fileName];
         }
-        if (fileDiv && fileDiv.parentElement) fileDiv.remove();
+        if (fileDiv.parentElement) fileDiv.remove();
         if (window.ActiveFile === fileName) {
             window.ActiveFile = undefined;
             setEditorValue("");
@@ -596,16 +503,41 @@ function CreateFile() {
 
     btnsDiv.appendChild(openBtn);
     btnsDiv.appendChild(delBtn);
-
     fileDiv.appendChild(nameSpan);
     fileDiv.appendChild(btnsDiv);
     container.appendChild(fileDiv);
+    return fileDiv;
+}
+
+function CreateFileFromFirebase(fileName, content) {
+    window.Files = window.Files || {};
+    window.Files[fileName] = content;
+
+    if (!document.getElementById(fileName)) createFileCard(fileName);
+}
+
+function CreateFile() {
+    window.Files = window.Files || {};
+
+    const nameInput = document.getElementById("FileNameInput");
+    if (!nameInput) {alert("Kein Dateiname-Eingabefeld gefunden"); return;}
+
+    const fileName = nameInput.value.trim();
+    if (!fileName) {alert("Bitte einen Dateinamen eingeben"); return;}
+
+    if (window.Files[fileName] !== undefined) { alert("Datei existiert bereits"); return;}
+
+    window.Files[fileName] = "";
+    const fileDiv = createFileCard(fileName);
+    if (!fileDiv) {
+        console.warn("Files container not found");
+        return;
+    }
 
     // setze als aktive Datei und fülle Editor
     window.ActiveFile = fileName;
     setEditorValue("");
 
-    // clear input field
     nameInput.value = "";
 }
 
@@ -634,3 +566,5 @@ window.insertCodeAtCursor = insertCodeAtCursor;
 window.RunCode = RunCode;
 window.insertTemplate = insertTemplate;
 window.codeTemplates = codeTemplates;
+window.getEditorValue = getEditorValue;
+window.setEditorValue = setEditorValue;

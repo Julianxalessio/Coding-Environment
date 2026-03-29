@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="CSS/Classes.css">
     <link rel="stylesheet" href="CSS/codeMirror.css">
     <link rel="stylesheet" href="CSS/lookInside.css">
-    <link rel="stylesheet" href="CSS/highlighter.css">
 
     <title>Coding-Environment</title>
 </head>
@@ -26,7 +25,7 @@
             <input type="email" placeholder="Email" id="LoginInputName">
             <input type="password" placeholder="Passwort" id="LoginInputPassword">
             <button onclick="togglePasswordLogin()" id="TogglePasswordButtonLogin">
-                <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+                <svg class="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
                     stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
                     <path
                         d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8 a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
@@ -35,14 +34,14 @@
                 </svg>
             </button>
             <button id="LoginButton" onclick="loginEntered()">Login</button>
-            <button id="LogoutButton" onclick="logout()">Logout</button>
+            <button class="LogoutButton" onclick="logout()">Logout</button>
         </div>
         <div id="RegisterContainer">
             <h3>Register</h3>
             <input type="email" placeholder="Email" id="RegisterInputName">
             <input type="password" id="RegisterInputPassword" placeholder="Passwort">
             <button onclick="togglePasswordRegister()" id="TogglePasswordButtonRegister">
-                <svg id="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+                <svg class="ToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
                     stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
                     <path
                         d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8 a17.92 17.92 0 0 1 5.06-5.94M1 1l22 22" />
@@ -51,7 +50,7 @@
                 </svg>
             </button>
             <button id="RegisterButton" onclick="registerEntered()">Register</button>
-            <button id="LogoutButton" onclick="logout()">Logout</button>
+            <button class="LogoutButton" onclick="logout()">Logout</button>
         </div>
         <h2 onclick="OpenLoginSite()" id="CloseButton">X</h2>
     </div>
@@ -64,7 +63,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
     <script src="JS/CodeMirror.js"></script>
     <script src="JS/LoginRegister.js"></script>
-    
     <script src="JS/Jal.js"></script>
     <script src="JS/listener.js"></script>
     <script src="JS/Firebase.js" type="module"></script>

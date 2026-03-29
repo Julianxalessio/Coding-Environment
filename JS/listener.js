@@ -1,41 +1,54 @@
-window.addEventListener("keydown", function (e) {
-  const target = e.target;
-  const inCodeMirror = !!(target && target.closest && target.closest('.CodeMirror'));
-  const inFormField = !!(target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable));
-
-  if (inCodeMirror || inFormField) return;
-
-  if (!e.ctrlKey) return;
-  const key = e.key.toLowerCase();
-  if (key === 'r') {
-    e.preventDefault();
-    if (typeof window.RunCode === 'function') window.RunCode();
-  } else if (key === 's') {
-    e.preventDefault();
-    if (typeof window.SaveFile === 'function') window.SaveFile();
-  } else if (key === 'i') {
-    e.preventDefault();
-    if (typeof window.insertTemplate === 'function') window.insertTemplate();
-  } else if (key === 'l') {
-    e.preventDefault();
-    if (typeof window.toggleInside === 'function') window.toggleInside();
-    else if (typeof toggleInside === 'function') toggleInside();
+const shortcutActions = {
+  r: () => typeof window.RunCode === "function" && window.RunCode(),
+  s: () => typeof window.SaveFile === "function" && window.SaveFile(),
+  i: () => typeof window.insertTemplate === "function" && window.insertTemplate(),
+  l: () => {
+    if (typeof window.toggleInside === "function") window.toggleInside();
+    else if (typeof toggleInside === "function") toggleInside();
   }
+};
+
+window.addEventListener("keydown", function (event) {
+  const target = event.target;
+  const inCodeMirror = Boolean(target && target.closest && target.closest(".CodeMirror"));
+  const inFormField = Boolean(
+    target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable)
+  );
+
+  if (inCodeMirror || inFormField || !event.ctrlKey) return;
+
+  const action = shortcutActions[event.key.toLowerCase()];
+  if (!action) return;
+  event.preventDefault();
+  action();
 });
 
-window.addEventListener("beforeunload", e => {
+window.addEventListener("beforeunload", event => {
   try {
     if (typeof window.logout === "function") window.logout();
     else window.LoginedUser = "";
-  } catch (err) {console.error("Logout on unload failed", err);}
-  e.preventDefault();
-  e.returnValue = "";
+  } catch (err) {
+    console.error("Logout on unload failed", err);
+  }
+  event.preventDefault();
+  event.returnValue = "";
 });
 
-document.getElementById("LoginContainer").addEventListener("keypress", function (e) {
-  if (e.key === "Enter") loginEntered();
-});
+function addEnterHandler(containerId, handlerName) {
+  const container = document.getElementById(containerId);
+  const handler = window[handlerName];
+  if (!container || typeof handler !== "function" || container.dataset.enterBound === "true") return;
 
-document.getElementById("RegisterContainer").addEventListener("keypress", function (e) {
-  if (e.key === "Enter") registerEntered();
-});
+  container.addEventListener("keypress", function (event) {
+    if (event.key === "Enter") handler();
+  });
+  container.dataset.enterBound = "true";
+}
+
+function bindAuthEnterHandlers() {
+  addEnterHandler("LoginContainer", "loginEntered");
+  addEnterHandler("RegisterContainer", "registerEntered");
+}
+
+document.addEventListener("layout-loaded", bindAuthEnterHandlers);
+bindAuthEnterHandlers();

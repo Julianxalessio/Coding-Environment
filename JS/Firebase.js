@@ -5,8 +5,6 @@ import {
     getDatabase,
     ref,
     set,
-    get,
-    child,
     remove,
     onValue
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
@@ -15,8 +13,7 @@ import {
     onAuthStateChanged,
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
-    signOut,
-    signInWithPopup
+    signOut
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -33,40 +30,72 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
+let stopFilesListener = null;
 
 // ensure globals used by non-module scripts and inline handlers exist
 window.LoginedUser = window.LoginedUser || "";
 window.ActiveFile = window.ActiveFile || undefined;
 window.Files = window.Files || {};
 
+function byId(id) {
+    return document.getElementById(id);
+}
+
+function clearFileList() {
+    const container = byId("FilesContainer2");
+    if (container) container.innerHTML = "";
+}
+
+function setUserDisplay(text) {
+    const label = byId("UserName");
+    if (label) label.innerHTML = text;
+}
+
+function getCurrentEditorContent() {
+    if (typeof window.getEditorValue === "function") return window.getEditorValue();
+    return byId("editor")?.value || "";
+}
+
+function setCurrentEditorContent(content) {
+    if (typeof window.setEditorValue === "function") {
+        window.setEditorValue(content || "");
+        return;
+    }
+    const editorEl = byId("editor");
+    if (editorEl) editorEl.value = content || "";
+}
+
+function showUserLoggedIn(user) {
+    window.LoginedUser = user.uid;
+    setUserDisplay(user.email || user.uid);
+    clearFileList();
+    window.LoadFiles();
+}
+
+function showUserLoggedOut() {
+    window.LoginedUser = "";
+    window.ActiveFile = undefined;
+    window.Files = {};
+    setUserDisplay("Login");
+    clearFileList();
+    setCurrentEditorContent("");
+    const lookIn = byId("LookInContent");
+    if (lookIn) lookIn.value = "";
+    const output = byId("Output");
+    if (output) output.value = "";
+}
+
 window.creatUser = function (email, password) {
     createUserWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
-            const user = userCredential.user;
-            window.LoginedUser = user.uid;
-            document.getElementById("UserName").innerHTML = user.email || user.uid;
+            showUserLoggedIn(userCredential.user);
             OpenLoginSite();
-            const FilesContainer = document.getElementById("FilesContainer2");
-            FilesContainer.innerHTML = "";
-            LoadFiles();
         })
         .catch((error) => {
             alert(error.message);
             console.error("Auth register error:", error);
         });
 };
-
-function SaveFile() {
-    const UserName = window.LoginedUser;
-    const FileName = window.ActiveFile;
-    const FileContent = document.getElementById("editor").value; // <- use editor
-    if (FileName == undefined) alert("No file selected");
-    else {
-        window.Files[FileName] = FileContent;
-        SaveFileToFirebase()
-        alert("Sucessfuly saved");
-    }
-}
 
 window.SaveFileToFirebase = function () {
     if (!window.LoginedUser) {
@@ -77,21 +106,18 @@ window.SaveFileToFirebase = function () {
         alert("No file selected or created!");
         return;
     }
-    const UserName = window.LoginedUser;
-    const FileName = window.ActiveFile;
-    const FileContent = document.getElementById("editor").value; // <- use editor
-    const dbRef = ref(db, `users/${UserName}/Files/${FileName}`);
+    const userName = window.LoginedUser;
+    const fileName = window.ActiveFile;
+    const fileContent = getCurrentEditorContent();
+    const dbRef = ref(db, `users/${userName}/Files/${fileName}`);
 
-    if (UserName == "" || FileName == "") alert("Error");
-    else {
-        set(dbRef, {
-            Content: FileContent
-        }).then(() => {
-            console.log("File saved!");
-        }).catch((error) => {
-            console.error("Fehler beim Speichern:", error);
-        });
-    }
+    set(dbRef, {
+        Content: fileContent
+    }).then(() => {
+        console.log("File saved!");
+    }).catch((error) => {
+        console.error("Fehler beim Speichern:", error);
+    });
 };
 
 window.CreateFileOnFirebase = function (FileName) {
@@ -100,49 +126,54 @@ window.CreateFileOnFirebase = function (FileName) {
         return;
     }
 
-    const UserName = window.LoginedUser;
-    const FileContent = document.getElementById("editor").value; // <- use editor
-    const dbRef = ref(db, `users/${UserName}/Files/${FileName}`);
-
-    if (UserName == "" || FileName == "") alert("Error");
-    else {
-        set(dbRef, {
-            Content: FileContent
-        }).then(() => {
-            console.log("File saved!");
-        }).catch((error) => {
-            console.error("Fehler beim Speichern:", error);
-        });
+    if (!FileName) {
+        alert("Error");
+        return;
     }
+
+    const userName = window.LoginedUser;
+    const fileContent = getCurrentEditorContent();
+    const dbRef = ref(db, `users/${userName}/Files/${FileName}`);
+
+    set(dbRef, {
+        Content: fileContent
+    }).then(() => {
+        console.log("File saved!");
+    }).catch((error) => {
+        console.error("Fehler beim Speichern:", error);
+    });
 };
 
 window.LoadFiles = function () {
-    const db = getDatabase();
-    const UserName = window.LoginedUser;
-    const filesRef = ref(db, `users/${UserName}/Files`);
+    if (!window.LoginedUser) return;
+    if (stopFilesListener) {
+        stopFilesListener();
+        stopFilesListener = null;
+    }
 
-    onValue(filesRef, (snapshot) => {
+    const userName = window.LoginedUser;
+    const filesRef = ref(db, `users/${userName}/Files`);
+
+    stopFilesListener = onValue(filesRef, (snapshot) => {
+        clearFileList();
+        window.Files = {};
         const data = snapshot.val();
         if (data) {
             Object.keys(data).forEach(fileName => {
                 const file = data[fileName];
                 CreateFileFromFirebase(fileName, file.Content);
             });
-        } 
-        else console.log("Keine Dateien gefunden.");
+        } else {
+            console.log("Keine Dateien gefunden.");
+        }
     });
-}
+};
 
 window.login = function (email, password) {
     signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
-            const user = userCredential.user;
-            window.LoginedUser = user.uid;
-            document.getElementById("UserName").innerHTML = user.email || user.uid;
-            const FilesContainer = document.getElementById("FilesContainer2");
-            FilesContainer.innerHTML = "";
+            showUserLoggedIn(userCredential.user);
             OpenLoginSite();
-            LoadFiles();
         })
         .catch((error) => {
             alert(error.message);
@@ -152,13 +183,11 @@ window.login = function (email, password) {
 
 window.logout = function () {
     signOut(auth).then(() => {
-        window.LoginedUser = "";
-        document.getElementById("UserName").innerHTML = "Login";
-        const FilesContainer = document.getElementById("FilesContainer2");
-        FilesContainer.innerHTML = "";
-        document.getElementById("editor").value = "";
-        document.getElementById("LookInContent").value = "";
-        document.getElementById("Output").value = "";
+        if (stopFilesListener) {
+            stopFilesListener();
+            stopFilesListener = null;
+        }
+        showUserLoggedOut();
     }).catch((error) => {
         console.error("Logout error:", error);
     });
@@ -166,72 +195,46 @@ window.logout = function () {
 
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        window.LoginedUser = user.uid;
-        document.getElementById("UserName").innerHTML = user.email || user.uid;
-        const FilesContainer = document.getElementById("FilesContainer2");
-        FilesContainer.innerHTML = "";
-        LoadFiles();
+        showUserLoggedIn(user);
     } else {
-        window.LoginedUser = "";
-        document.getElementById("UserName").innerHTML = "Login";
-        const FilesContainer = document.getElementById("FilesContainer2");
-        FilesContainer.innerHTML = "";
+        if (stopFilesListener) {
+            stopFilesListener();
+            stopFilesListener = null;
+        }
+        showUserLoggedOut();
     }
 });
 
 window.RemoveFile = function (FileName) {
-    const UserName = window.LoginedUser;
-    let pathToDelete = `users/${UserName}/Files/${FileName}`
+    if (!window.LoginedUser || !FileName) return;
+
+    const userName = window.LoginedUser;
+    const pathToDelete = `users/${userName}/Files/${FileName}`;
     remove(ref(db, pathToDelete))
         .then(() => {
             console.log("Daten erfolgreich gelöscht.");
         })
         .catch((error) => {
             console.error("Fehler beim Löschen:", error);
-        })
-}
+        });
+};
 
-function LoadFileContent(Parent) {
-    const FileName = Parent.parentElement.id;
-    if (window.ActiveFile != FileName) {
-        if (window.ActiveFile != undefined) {
-            let ContentOfActiveFile = window.Files[window.ActiveFile];
-            let ContentOfInput = document.getElementById("editor").value; // <- use editor
-            if (ContentOfActiveFile != ContentOfInput) {
-                let Antwort = confirm("Do you want to continue without saving?");
-                if (Antwort == false) return;
-                else {
-                    let Content = window.Files[FileName];
-                    const editorEl = document.getElementById("editor");
-                    editorEl.value = Content; // set editor value
-                    const AllFiles = document.querySelectorAll(".File");
-                    AllFiles.forEach(element => {
-                        element.classList.remove("active");
-                    });
-                    document.getElementById(FileName).className = "File active";
-                    window.ActiveFile = FileName;
-                }
-            } else {
-                let Content = window.Files[FileName];
-                const editorEl = document.getElementById("editor");
-                editorEl.value = Content; // set editor value
-                const AllFiles = document.querySelectorAll(".File");
-                AllFiles.forEach(element => {
-                    element.classList.remove("active");
-                });
-                document.getElementById(FileName).className = "File active";
-                window.ActiveFile = FileName;
-            }
-        } else {
-            let Content = window.Files[FileName];
-            const editorEl = document.getElementById("editor");
-            editorEl.value = Content; // set editor value
-            const AllFiles = document.querySelectorAll(".File");
-            AllFiles.forEach(element => {
-                element.classList.remove("active");
-            });
-            document.getElementById(FileName).className = "File active";
-            window.ActiveFile = FileName;
+window.LoadFileContent = function (Parent) {
+    const fileName = Parent.parentElement.id;
+    if (window.ActiveFile === fileName) return;
+
+    if (window.ActiveFile !== undefined) {
+        const activeContent = window.Files[window.ActiveFile];
+        const currentEditorContent = getCurrentEditorContent();
+        if (activeContent !== currentEditorContent) {
+            if (!confirm("Do you want to continue without saving?")) return;
         }
     }
-}
+
+    setCurrentEditorContent(window.Files[fileName]);
+    
+    document.querySelectorAll(".File").forEach(el => el.classList.remove("active"));
+    const activeFileEl = byId(fileName);
+    if (activeFileEl) activeFileEl.classList.add("active");
+    window.ActiveFile = fileName;
+};
